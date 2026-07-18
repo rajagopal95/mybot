@@ -1,0 +1,26 @@
+slam_toolbox:
+  ros__parameters:
+    # Queue and processing settings
+    queue_size: 50                     # Larger queue size to prevent overflow
+    use_throttle_scans: true           # Enable scan throttling
+    throttle_scans: 2                  # Process every other scan
+    transform_timeout: 2.0             # Extended transform timeout
+    map_update_interval: 5.0           # Less frequent map updates
+    resolution: 0.05                   # Map resolution
+    max_laser_range: 10.0              # Match with lidar settings
+    minimum_time_interval: 0.5         # Min time between scans
+    transform_publish_period: 0.05     # TF publish rate
+    
+    # Frame settings
+    map_frame: map
+    odom_frame: bumpy7/odom
+    base_frame: bumpy7/base_link
+    scan_topic: bumpy7/scan
+    
+    # Solver settings for performance
+    solver_plugin: solver_plugins::CeresSolver
+    ceres_linear_solver: SPARSE_NORMAL_CHOLESKY
+    ceres_preconditioner: SCHUR_JACOBI
+    ceres_trust_strategy: LEVENBERG_MARQUARDT
+    optimization_iterations: 3
+    enable_interactive_mode: false
