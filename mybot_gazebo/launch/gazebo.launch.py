@@ -29,8 +29,26 @@ def generate_launch_description():
         "mybot.urdf.xacro"
     )
 
+    # NOTE: gazebo_ros2_control hands robot_description to controller_manager
+    # as a CLI-style "--param robot_description:=<xml>" override. rcl's
+    # argument parser has a length limit for override rules, and this
+    # URDF (with xacro's banner comment + inline doc comments) exceeds it,
+    # crashing with "parser error Couldn't parse parameter override rule
+    # ... arguments.c:343" even after flattening newlines.
+    #
+    # Fix: parse/re-serialize through Python's stdlib ElementTree, which
+    # safely drops comments as a side effect (no regex, so no risk of
+    # eating real tags the way sed did) and produces compact single-line
+    # output, bringing the string under the limit.
+    robot_description_content = Command([
+        "bash -c \"xacro " + xacro_file +
+        " | python3 -c 'import sys,xml.etree.ElementTree as ET; "
+        "sys.stdout.write(ET.tostring(ET.fromstring(sys.stdin.read()),encoding=\\\"unicode\\\"))' "
+        "| tr -s '\\n' ' '\""
+    ])
+
     robot_description = ParameterValue(
-        Command(["xacro", " ", xacro_file]),
+        robot_description_content,
         value_type=str
     )
 
@@ -69,7 +87,7 @@ def generate_launch_description():
         arguments=[
             "-entity", "mybot",
             "-topic", "robot_description",
-            "-z", "0.10",
+            "-z", "0.01",
         ],
     )
 
@@ -83,7 +101,7 @@ def generate_launch_description():
     # Delayed so Gazebo and controller_manager are fully up first.
     # ---------------------------------------------------------------
     spawn_diff_drive = TimerAction(
-        period=5.0,
+        period=10.0,
         actions=[
             Node(
                 package="controller_manager",
@@ -96,7 +114,7 @@ def generate_launch_description():
     )
 
     spawn_joint_state_broadcaster = TimerAction(
-        period=5.0,
+        period=10.0,
         actions=[
             Node(
                 package="controller_manager",

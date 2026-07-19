@@ -61,6 +61,24 @@ def generate_launch_description():
         ),
 
         #
+        # Scan filter (removes robot self-hits before SLAM sees them)
+        #
+        Node(
+            package="laser_filters",
+            executable="scan_to_scan_filter_chain",
+            name="scan_filter_node",
+            output="screen",
+            parameters=[
+                os.path.join(config_dir, "scan_filter.yaml"),
+                {"use_sim_time": use_sim_time}
+            ],
+            remappings=[
+                ("scan", "scan_raw"),
+                ("scan_filtered", "scan"),
+            ]
+        ),
+
+        #
         # Cartographer
         #
         Node(

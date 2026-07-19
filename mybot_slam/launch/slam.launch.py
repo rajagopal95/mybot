@@ -20,10 +20,45 @@ def generate_launch_description():
         "mapper_params_online_async.yaml"
     )
 
+    ekf_config = os.path.join(
+        get_package_share_directory("mybot_slam"),
+        "config",
+        "ekf.yaml"
+    )
+
     rviz_config = os.path.join(
         get_package_share_directory("mybot_slam"),
         "rviz",
         "slam.rviz"
+    )
+
+    ekf_node = Node(
+        package="robot_localization",
+        executable="ekf_node",
+        name="ekf_filter_node",
+        output="screen",
+        parameters=[
+            ekf_config,
+            {"use_sim_time": use_sim_time}
+        ],
+        remappings=[
+            ("odometry/filtered", "/odom_filtered")
+        ]
+    )
+
+    scan_filter = Node(
+        package="laser_filters",
+        executable="scan_to_scan_filter_chain",
+        name="scan_filter_node",
+        output="screen",
+        parameters=[
+            os.path.join(get_package_share_directory("mybot_slam"), "config", "scan_filter.yaml"),
+            {"use_sim_time": use_sim_time}
+        ],
+        remappings=[
+            ("scan", "scan_raw"),
+            ("scan_filtered", "scan"),
+        ]
     )
 
     slam_toolbox = IncludeLaunchDescription(
@@ -58,6 +93,8 @@ def generate_launch_description():
             default_value="true"
         ),
 
+        ekf_node,
+        scan_filter,
         slam_toolbox,
         rviz,
 
