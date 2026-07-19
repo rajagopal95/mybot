@@ -20,6 +20,22 @@ def generate_launch_description():
     declare_params = DeclareLaunchArgument(
         'params_file', default_value=os.path.join(nav2_dir, 'config', 'nav2_params.yaml'))
 
+    ekf_config = os.path.join(nav2_dir, 'config', 'ekf.yaml')
+
+    ekf_node = Node(
+        package="robot_localization",
+        executable="ekf_node",
+        name="ekf_filter_node",
+        output="screen",
+        parameters=[
+            ekf_config,
+            {"use_sim_time": use_sim_time}
+        ],
+        remappings=[
+            ("odometry/filtered", "/odom")
+        ]
+    )
+
     nav2_bringup_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(nav2_bringup_dir, 'launch', 'bringup_launch.py')),
@@ -43,6 +59,7 @@ def generate_launch_description():
         declare_map,
         declare_params,
         DeclareLaunchArgument('use_sim_time', default_value='true'),
+        ekf_node,
         nav2_bringup_launch,
         rviz_node
     ])
