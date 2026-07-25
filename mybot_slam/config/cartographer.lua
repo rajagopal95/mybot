@@ -7,7 +7,7 @@ options = {
 
   map_frame = "map",
 
-  tracking_frame = "imu_link",      -- Use base_link
+  tracking_frame = "base_link",      -- Use base_link
   published_frame = "odom",     -- Publish map->base_link
   odom_frame = "odom",
 
@@ -38,7 +38,7 @@ options = {
 
 MAP_BUILDER.use_trajectory_builder_2d = true
 
-TRAJECTORY_BUILDER_2D.use_imu_data = true
+TRAJECTORY_BUILDER_2D.use_imu_data = false
 
 TRAJECTORY_BUILDER_2D.min_range = 0.15
 TRAJECTORY_BUILDER_2D.max_range = 8.0
@@ -46,17 +46,17 @@ TRAJECTORY_BUILDER_2D.missing_data_ray_length = 8.5
 TRAJECTORY_BUILDER_2D.num_accumulated_range_data = 2
 
 TRAJECTORY_BUILDER_2D.ceres_scan_matcher.occupied_space_weight = 10.
-TRAJECTORY_BUILDER_2D.ceres_scan_matcher.translation_weight = 5.
-TRAJECTORY_BUILDER_2D.ceres_scan_matcher.rotation_weight = 20.
+TRAJECTORY_BUILDER_2D.ceres_scan_matcher.translation_weight = 10.
+TRAJECTORY_BUILDER_2D.ceres_scan_matcher.rotation_weight = 40.
 TRAJECTORY_BUILDER_2D.motion_filter.max_distance_meters = 0.1
 TRAJECTORY_BUILDER_2D.motion_filter.max_angle_radians = math.rad(1.0)
-TRAJECTORY_BUILDER_2D.real_time_correlative_scan_matcher.linear_search_window = 0.2
-TRAJECTORY_BUILDER_2D.real_time_correlative_scan_matcher.angular_search_window = math.rad(20.)
+TRAJECTORY_BUILDER_2D.real_time_correlative_scan_matcher.linear_search_window = 0.1
+TRAJECTORY_BUILDER_2D.real_time_correlative_scan_matcher.angular_search_window = math.rad(10.)
 
 TRAJECTORY_BUILDER_2D.use_online_correlative_scan_matching = true
 
 POSE_GRAPH.optimize_every_n_nodes = 20
-POSE_GRAPH.constraint_builder.min_score = 0.65
+POSE_GRAPH.constraint_builder.min_score = 0.7
 POSE_GRAPH.constraint_builder.global_localization_min_score = 0.7
 
 return options
