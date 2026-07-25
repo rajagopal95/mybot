@@ -10,6 +10,7 @@ pkill -9 -f ros2
 pkill -9 -f cartographer
 pkill -9 -f slam_toolbox
 pkill -9 -f rtabmap
+pkill -9 -f compare_slam
 pkill -9 -f teleop_twist_keyboard
 
 sleep 2
@@ -22,12 +23,13 @@ echo "      MyBot Mapping Launcher"
 echo "========================================="
 echo
 echo "Select mapping method:"
-echo "1) SLAM Toolbox"
-echo "2) Cartographer"
-echo "3) RTAB-Map"
+echo "1) SLAM Toolbox (Single)"
+echo "2) Cartographer (Single)"
+echo "3) Multi-SLAM Comparison (SLAM Toolbox + Cartographer + RTAB-Map)"
+echo "4) Multi-SLAM Comparison (SLAM Toolbox + Cartographer + RTAB-Map)"
 echo
 
-read -p "Enter your choice [1-3]: " choice
+read -p "Enter your choice [1-4]: " choice
 
 echo "Starting Gazebo simulation..."
 gnome-terminal -- bash -c "
@@ -55,12 +57,20 @@ case $choice in
         ros2 launch mybot_slam cartographer.launch.py
         exec bash"
         ;;
-    3)
-        echo "Starting RTAB-Map..."
+    3|4)
+        echo "Starting Multi-SLAM (SLAM Toolbox + Cartographer + RTAB-Map)..."
         gnome-terminal -- bash -c "
         source /opt/ros/humble/setup.bash
         source ~/mybot_ws/install/setup.bash
-        ros2 launch mybot_slam rtabmap.launch.py
+        ros2 launch mybot_slam dual_slam.launch.py
+        exec bash"
+
+        sleep 4
+        echo "Starting Real-Time Multi-SLAM Comparison Monitor..."
+        gnome-terminal -- bash -c "
+        source /opt/ros/humble/setup.bash
+        source ~/mybot_ws/install/setup.bash
+        ros2 run mybot_slam compare_slam.py
         exec bash"
         ;;
     *)
@@ -69,7 +79,7 @@ case $choice in
         ;;
 esac
 
-sleep 5
+sleep 4
 
 echo "Starting Teleop..."
 gnome-terminal -- bash -c "
