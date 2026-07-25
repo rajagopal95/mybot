@@ -95,7 +95,7 @@ def generate_launch_description():
                 "-configuration_directory",
                 config_dir,
                 "-configuration_basename",
-                "slam.lua",
+                "cartographer.lua",
             ],
             remappings=[
                 ("scan", "/scan"),
