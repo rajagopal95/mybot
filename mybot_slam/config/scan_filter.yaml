@@ -1,0 +1,10 @@
+scan_filter_node:
+  ros__parameters:
+    filter1:
+      name: robot_body_filter
+      type: laser_filters/LaserScanBoxFilter
+      params:
+        box_frame: base_link
+        box_size: [0.5, 0.42, 0.35]
+        box_position: [0.0, 0.0, 0.0]
+        invert: false
