@@ -11,6 +11,8 @@ pkill -9 -f cartographer
 pkill -9 -f slam_toolbox
 pkill -9 -f rtabmap
 pkill -9 -f teleop_twist_keyboard
+pkill -9 -f scan_to_scan_filter_chain
+pkill -9 -f ekf_node
 
 sleep 2
 
