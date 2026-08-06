@@ -3,7 +3,7 @@ project(mybot_rtabmap)
 
 find_package(ament_cmake REQUIRED)
 
-install(DIRECTORY launch
+install(DIRECTORY launch 
   DESTINATION share/${PROJECT_NAME}
 )
 

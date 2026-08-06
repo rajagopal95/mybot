@@ -1,10 +1,29 @@
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
-from launch.substitutions import LaunchConfiguration
+from launch.substitutions import LaunchConfiguration, Command, PathJoinSubstitution
 from launch_ros.actions import Node
+from launch_ros.substitutions import FindPackageShare
+from launch_ros.parameter_descriptions import ParameterValue
 
 def generate_launch_description():
     use_sim_time = LaunchConfiguration('use_sim_time', default='true')
+
+    xacro_file = PathJoinSubstitution([
+        FindPackageShare('mybot_description'), 'urdf', 'mybot.urdf.xacro'
+    ])
+
+    robot_description = ParameterValue(
+        Command([
+            'xacro ', xacro_file, ' use_camera:=true'
+        ]),
+        value_type=str
+    )
+
+    robot_state_publisher = Node(
+        package='robot_state_publisher',
+        executable='robot_state_publisher',
+        parameters=[{'robot_description': robot_description, 'use_sim_time': use_sim_time}],
+    )
 
     # Actual published topics from the camera plugin (verified via /robot_description dump):
     #   /camera/depth_camera/image_raw
@@ -68,6 +87,7 @@ def generate_launch_description():
 
     return LaunchDescription([
         DeclareLaunchArgument('use_sim_time', default_value='true'),
+        robot_state_publisher,
         rgbd_odometry,
         rtabmap_slam,
         rviz,
