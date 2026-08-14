@@ -178,7 +178,7 @@ Each choice launches Gazebo, the robot model, the selected SLAM package, and RVi
 ### Save the map
 
 ```bash
-python3 src/mybot/mybot_slam/scripts/save_map.py
+ros2 run mybot_slam save_map
 ```
 
 ```text
