@@ -221,12 +221,12 @@ bash mapping.sh                # choose 1 / 2 / 3
 # ... drive robot around, then Ctrl+C when mapping done ...
 python3 src/mybot/mybot_slam/scripts/save_map.py
 
-bash kill.sh                   # clean up before switching modes
+sudo sh kill.sh                   # clean up before switching modes
 
 bash start.sh                  # launch navigation with saved map
 # In RViz: 2D Pose Estimate -> Nav2 Goal
 
-bash kill.sh                   # clean up when finished
+sudo sh kill.sh                   # clean up when finished
 ```
 
 ---
