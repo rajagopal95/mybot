@@ -3,15 +3,25 @@ import os
 from ament_index_python.packages import get_package_share_directory
 
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription, TimerAction
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, TimerAction
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import Command
+from launch.substitutions import Command, LaunchConfiguration
 
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
 
 
 def generate_launch_description():
+
+    use_camera = LaunchConfiguration("use_camera")
+
+    declare_use_camera = DeclareLaunchArgument(
+        "use_camera",
+        default_value="false",
+        description="Spawn robot with the depth camera included. "
+                     "Leave false for Cartographer/SLAM Toolbox runs; "
+                     "set true only when this robot will be used with RTAB-Map.",
+    )
 
     pkg_description = get_package_share_directory("mybot_description")
     pkg_gazebo = get_package_share_directory("mybot_gazebo")
@@ -41,7 +51,7 @@ def generate_launch_description():
     # eating real tags the way sed did) and produces compact single-line
     # output, bringing the string under the limit.
     robot_description_content = Command([
-        "bash -c \"xacro " + xacro_file +
+        "bash -c \"xacro ", xacro_file, " use_camera:=", use_camera,
         " | python3 -c 'import sys,xml.etree.ElementTree as ET; "
         "sys.stdout.write(ET.tostring(ET.fromstring(sys.stdin.read()),encoding=\\\"unicode\\\"))' "
         "| tr -s '\\n' ' '\""
@@ -127,6 +137,7 @@ def generate_launch_description():
     )
 
     return LaunchDescription([
+        declare_use_camera,
         gazebo,
         robot_state_publisher,
         delayed_spawn,

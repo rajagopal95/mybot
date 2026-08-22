@@ -42,7 +42,16 @@ echo
 read -p "Enter your choice [1-3]: " choice
 
 echo "Starting Gazebo..."
-ros2 launch mybot_gazebo gazebo.launch.py > "$RUN_DIR/gazebo.log" 2>&1 &
+
+# Camera is only needed for RTAB-Map (choice 3); SLAM Toolbox/Cartographer
+# keep spawning the camera-less robot so the EKF/Cartographer TF setup
+# is unaffected.
+GAZEBO_ARGS=""
+if [ "$choice" == "3" ]; then
+    GAZEBO_ARGS="use_camera:=true"
+fi
+
+ros2 launch mybot_gazebo gazebo.launch.py $GAZEBO_ARGS > "$RUN_DIR/gazebo.log" 2>&1 &
 GAZEBO_PID=$!
 
 sleep 10
@@ -58,7 +67,7 @@ case $choice in
         ;;
     3)
         echo "Starting RTAB-Map..."
-        ros2 launch mybot_slam rtabmap.launch.py > "$RUN_DIR/rtabmap.log" 2>&1 &
+        ros2 launch mybot_rtabmap rtabmap.launch.py > "$RUN_DIR/rtabmap.log" 2>&1 &
         ;;
     *)
         echo "Invalid choice!"
