@@ -1,39 +1,67 @@
-# MyBot ROS 2 Navigation Stack
+# 🤖 MyBot — ROS2 SLAM Comparative Study & Navigation Stack
 
-A complete ROS 2 workspace for autonomous mobile robot (AMR) simulation, mapping, localization, and navigation. The project supports multiple SLAM algorithms and provides simple shell scripts to streamline the mapping and navigation workflow.
+A ROS2 workspace for autonomous mobile robot (AMR) simulation, mapping, localization, and navigation — built around a **comparative SLAM study** (SLAM Toolbox vs Cartographer vs RTAB-Map) with a full Nav2 navigation pipeline.
 
----
-
-# Features
-
-* 🤖 Autonomous Mobile Robot (AMR) simulation
-* 🗺️ Multiple SLAM algorithms
-
-  * SLAM Toolbox
-  * Cartographer
-  * RTAB-Map
-* 🚀 ROS 2 Nav2 Navigation Stack
-* 📍 Localization with Initial Pose Estimation
-* 🌍 Gazebo Simulation
-* 📊 RViz Visualization
-* 💾 Interactive Map Saving Script
-* 📁 Organized project structure
-* 📄 Log generation
-* 🛠️ Utility scripts for launching and verification
+The workspace is developed and tested using **ROS2 Humble on Ubuntu 22.04**.
 
 ---
 
-# Repository Structure
+# 📌 Overview
+
+`mybot_ws` simulates a differential-drive robot in Gazebo and supports three interchangeable SLAM backends, letting you map the same environment multiple ways and compare results before moving into autonomous navigation with Nav2.
+
+The workspace contains:
+
+- Robot description (URDF/Xacro)
+- Gazebo simulation worlds
+- Three SLAM backends (SLAM Toolbox, Cartographer, RTAB-Map)
+- Nav2-based navigation with EKF-fused odometry
+- Interactive map-saving script
+- Shell scripts for one-command mapping, navigation, verification, and cleanup
+
+---
+
+# 🚀 Features
+
+- 🤖 Autonomous Mobile Robot (AMR) simulation
+- 🗺️ Multiple SLAM algorithms — SLAM Toolbox, Cartographer, RTAB-Map
+- 🚀 ROS2 Nav2 navigation stack
+- 📍 Localization with initial pose estimation
+- 🌍 Gazebo simulation
+- 📊 RViz visualization
+- 💾 Interactive map-saving script
+- 📄 Log generation
+- 🛠️ One-command mapping / navigation / verify / kill scripts
+
+---
+
+# 🛠️ Technology Stack
+
+| Component | Technology |
+|---|---|
+| Operating System | Ubuntu 22.04 |
+| Middleware | ROS2 Humble |
+| Programming | Python |
+| SLAM | slam_toolbox, Cartographer, RTAB-Map |
+| Navigation | ROS2 Navigation Stack (Nav2) |
+| Sensor Fusion | robot_localization (EKF) |
+| Visualization | RViz2 |
+| Simulation | Gazebo Classic |
+| Build System | Colcon |
+
+---
+
+# 📂 Project Structure
 
 ```text
 mybot_ws/
 └── src/
     └── mybot/
-        ├── mybot_description/
-        ├── mybot_gazebo/
-        ├── mybot_navigation/
-        ├── mybot_rtabmap/
-        ├── mybot_slam/
+        ├── mybot_description/     # URDF/Xacro robot model
+        ├── mybot_gazebo/          # Gazebo worlds + launch + controllers
+        ├── mybot_navigation/      # Nav2 launch, params, EKF, RViz config
+        ├── mybot_rtabmap/         # RTAB-Map launch package
+        ├── mybot_slam/            # SLAM Toolbox + Cartographer
         │   ├── config/
         │   ├── launch/
         │   ├── maps/
@@ -50,97 +78,82 @@ mybot_ws/
 
 ---
 
-# Packages
+# ⚙️ Installation
 
-## mybot_description
+## Prerequisites
 
-Contains the robot description files.
+- Ubuntu 22.04
+- ROS2 Humble
+- Nav2
+- Gazebo
+- RViz2
+- SLAM Toolbox
+- Cartographer
+- RTAB-Map
+- robot_localization
 
-* URDF/Xacro
-* Robot model
-
----
-
-## mybot_gazebo
-
-Simulation package containing:
-
-* Gazebo launch files
-* World files
-* Controller configuration
-
----
-
-## mybot_navigation
-
-Navigation package based on Nav2.
-
-Contains:
-
-* Navigation launch files
-* Nav2 parameters
-* EKF configuration
-* RViz configuration
-
----
-
-## mybot_slam
-
-Contains mapping configurations and launch files for:
-
-* SLAM Toolbox
-* Cartographer
-
-Also includes:
-
-* SLAM configuration files
-* Existing maps
-* RViz configuration
-* Map saving script
-
----
-
-## mybot_rtabmap
-
-Launch package for RTAB-Map based mapping.
-
----
-
-# Requirements
-
-* Ubuntu 22.04
-* ROS 2 Humble
-* Nav2
-* Gazebo
-* RViz2
-* SLAM Toolbox
-* Cartographer
-* RTAB-Map
-* robot_localization
-
----
-
-# Build the Workspace
+Install required ROS2 packages:
 
 ```bash
-cd ~/mybot_ws
+sudo apt update
 
-colcon build --symlink-install
-
-source install/setup.bash
+sudo apt install \
+ros-humble-slam-toolbox \
+ros-humble-cartographer \
+ros-humble-cartographer-ros \
+ros-humble-rtabmap-ros \
+ros-humble-navigation2 \
+ros-humble-nav2-bringup \
+ros-humble-robot-localization \
+ros-humble-teleop-twist-keyboard \
+ros-humble-rviz2
 ```
 
 ---
 
-# Mapping
+# 📥 Clone the Repository
 
-Start the mapping workflow by running:
+```bash
+git clone https://github.com/rajagopal95/mybot_ws.git
+cd mybot_ws
+```
+
+---
+
+# 🔨 Build the Workspace
+
+```bash
+colcon build --symlink-install
+source install/setup.bash
+```
+
+For every new terminal:
+
+```bash
+source ~/mybot_ws/install/setup.bash
+```
+
+---
+
+# 🧭 Quick Start Tutorial
+
+The full workflow revolves around four scripts: `verify.sh`, `mapping.sh`, `start.sh`, and `kill.sh`.
+
+## 1. Verify your setup
+
+Before your first run, confirm dependencies are installed:
+
+```bash
+bash verify.sh
+```
+
+## 2. Mapping — `mapping.sh`
 
 ```bash
 bash mapping.sh
 ```
 
-The script displays the following menu:
+You'll be prompted to choose a SLAM backend:
 
 ```text
 ====================================
@@ -148,114 +161,86 @@ The script displays the following menu:
 ====================================
 
 1. SLAM Toolbox
-
 2. Cartographer
-
 3. RTAB-Map
 
 Enter your choice:
 ```
 
-Select the desired mapping algorithm.
+| Choice | Backend | Notes |
+|---|---|---|
+| `1` | **SLAM Toolbox** | Lightweight 2D lidar SLAM, good default |
+| `2` | **Cartographer** | Pose-graph SLAM, strong loop closure on larger maps |
+| `3` | **RTAB-Map** | RGB-D/visual SLAM, use for 3D or camera-based mapping |
 
-After selecting a method, the script automatically launches:
+Each choice launches Gazebo, the robot model, the selected SLAM package, and RViz. Drive the robot around until the environment is fully mapped.
 
-* Gazebo
-* Robot model
-* Selected SLAM package
-* RViz
-
-Drive the robot around the environment until the entire area has been mapped.
-
----
-
-# Saving the Map
-
-Once mapping is complete, save the generated map using the provided Python script.
-
-Run:
+### Save the map
 
 ```bash
-python3 ~/mybot_ws/src/mybot/mybot_slam/scripts/save_map.py
+ros2 run mybot_slam save_map
 ```
-
-The script prompts for a map name.
-
-Example:
 
 ```text
 Enter map name:
 hospital
 ```
 
-The script automatically generates:
+Saved to `mybot_slam/maps/hospital.pgm` and `hospital.yaml`.
 
-```text
-mybot_slam/maps/
-
-hospital.pgm
-hospital.yaml
-```
-
-No additional arguments are required.
-
----
-
-# Navigation
-
-After a map has been created, launch the navigation stack:
+## 3. Navigation — `start.sh`
 
 ```bash
 bash start.sh
 ```
 
-This launches:
+Launches Gazebo, robot_state_publisher, localization, Nav2, and RViz using the saved map.
 
-* Gazebo
-* Robot State Publisher
-* Localization
-* Nav2
-* RViz
+**In RViz:**
+1. Click **2D Pose Estimate** → click + drag on the robot's actual position/heading.
+2. Click **Nav2 Goal** → click + drag on the target position/heading.
 
----
+## 4. Shut everything down — `kill.sh`
 
-# Initial Pose Estimation
+```bash
+bash kill.sh
+```
 
-Before sending any navigation goal, the robot must be localized.
-
-In RViz:
-
-1. Click **2D Pose Estimate**
-2. Click on the robot's current position.
-3. Drag the arrow to match the robot's orientation.
-4. Release the mouse.
-
-This initializes the robot's position on the map.
-
-> **Note:** Navigation will not work correctly until the initial pose has been set.
+Terminates all ROS2, Gazebo, and related processes. Run this between runs (e.g. switching from SLAM Toolbox to Cartographer) to avoid leftover nodes or port conflicts.
 
 ---
 
-# Sending Navigation Goals
+## Typical Session Example
 
-After setting the initial pose:
+```bash
+# Terminal 1
+cd ~/mybot_ws && source install/setup.bash
+bash verify.sh                 # sanity check
 
-1. Click **Nav2 Goal**
-2. Select the destination on the map.
-3. Drag to indicate the desired heading.
-4. Release the mouse.
+bash mapping.sh                # choose 1 / 2 / 3
+# ... drive robot around, then Ctrl+C when mapping done ...
+python3 src/mybot/mybot_slam/scripts/save_map.py
 
-Nav2 will automatically compute a path and navigate the robot to the selected goal.
+sudo sh kill.sh                   # clean up before switching modes
+
+bash start.sh                  # launch navigation with saved map
+# In RViz: 2D Pose Estimate -> Nav2 Goal
+
+sudo sh kill.sh                   # clean up when finished
+```
 
 ---
 
-# Complete Workflow
+# 🧠 Complete Workflow
 
 ```text
 Build Workspace
        │
        ▼
 Source Workspace
+       │
+       ▼
+Run verify.sh
        │
        ▼
 Run mapping.sh
@@ -279,116 +264,203 @@ Enter Map Name
 Map Saved (.pgm + .yaml)
        │
        ▼
+Run kill.sh
+       │
+       ▼
 Run start.sh
        │
        ▼
 Open RViz
        │
        ▼
-Use 2D Pose Estimate
+2D Pose Estimate
        │
        ▼
 Send Nav2 Goal
        │
        ▼
 Robot Navigates Autonomously
+       │
+       ▼
+Run kill.sh
 ```
 
 ---
 
-# Utility Scripts
+# 🖥️ Visualizing in RViz2
 
-## mapping.sh
+## Mapping (SLAM)
 
-Launches the mapping workflow.
+While `mapping.sh` is running, RViz opens automatically with the correct config from:
 
-Supported mapping methods:
+```text
+mybot_slam/rviz/
+```
 
-* SLAM Toolbox
-* Cartographer
-* RTAB-Map
+## Navigation (Nav2)
 
----
+While `start.sh` is running, RViz opens automatically with the navigation config from:
 
-## start.sh
+```text
+mybot_navigation/
+```
 
-Starts the navigation stack using the saved map.
-
----
-
-## verify.sh
-
-Verifies that the required packages and dependencies are correctly installed.
+Set the Fixed Frame to `map` and confirm `Map`, `Costmap`, `Path`, `LaserScan`, and `TF` displays are active.
 
 ---
 
-## kill.sh
+# 📊 ROS2 Communication
 
-Terminates all running ROS 2, Gazebo, and related processes.
+Important interfaces include:
+
+### Velocity Command
+```text
+/cmd_vel
+```
+
+### LiDAR / Scan
+```text
+/scan
+```
+
+### Odometry / TF
+```text
+/odom
+odom → base_link (EKF-fused)
+```
+
+To inspect available topics:
+
+```bash
+ros2 topic list
+```
+
+To inspect the TF tree:
+
+```bash
+ros2 run tf2_tools view_frames
+```
 
 ---
 
-# Maps
+# 📁 Utility Scripts Reference
 
-Generated maps are stored in:
+| Script | Purpose |
+|---|---|
+| `verify.sh` | Verifies required packages/dependencies are installed |
+| `mapping.sh` | Launches mapping workflow with SLAM backend selection menu |
+| `start.sh` | Starts navigation stack using the saved map |
+| `kill.sh` | Terminates all running ROS2, Gazebo, and related processes |
+| `save_map.py` | Interactive script to save the current map (prompts for name) |
+
+---
+
+# 💾 Maps & Logs
+
+Generated maps:
 
 ```text
 mybot_slam/maps/
+├── hospital.yaml / .pgm
+├── office.yaml / .pgm
+└── warehouse.yaml / .pgm
 ```
 
-Example:
-
-```text
-maps/
-
-hospital.yaml
-hospital.pgm
-
-office.yaml
-office.pgm
-
-warehouse.yaml
-warehouse.pgm
-```
-
----
-
-# Logs
-
-Log files are stored in:
+Logs:
 
 ```text
 logs/
+├── log1/
+│   ├── gazebo.log
+│   └── navigation.log
+└── log2/
+    ├── gazebo.log
+    └── navigation.log
 ```
 
-Example:
+---
+
+# 📁 Recommended Git Ignore
+
+```gitignore
+# ROS2
+build/
+install/
+log/
+
+# Python
+__pycache__/
+*.pyc
+
+# Backups
+*.bak
+*.backup
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+```
+
+---
+
+# 📸 Results
+
+The system is designed to demonstrate:
+
+- ✅ Comparative SLAM study across three backends
+- ✅ Real-time LiDAR/visual mapping
+- ✅ Multi-planner Nav2 navigation (SmacPlanner2D, ThetaStar, NavFn)
+- ✅ EKF-based sensor fusion
+- ✅ Saved occupancy-grid maps
+- ✅ One-command mapping/navigation/cleanup workflow
+
+Add project screenshots here:
 
 ```text
-logs/
+docs/
+├── mapping.png
+├── navigation.png
+└── rviz.png
+```
 
-log1/
-    gazebo.log
-    navigation.log
-
-log2/
-    gazebo.log
-    navigation.log
+```markdown
+![SLAM Mapping](docs/mapping.png)
 ```
 
 ---
 
-# Tips
+# 🔮 Future Improvements
 
-* Build the workspace before launching any scripts.
-* Source the workspace after every new terminal session.
-* Complete mapping before attempting navigation.
-* Always save the generated map after mapping.
-* Always use **2D Pose Estimate** before sending navigation goals.
-* Wait until Nav2 is fully initialized before sending a goal.
-* If localization drifts, reset the robot's position using **2D Pose Estimate**.
+- Dynamic obstacle avoidance
+- Per-goal planner auto-selection
+- Isaac ROS perception integration
+- YOLOv8-based object detection node
+- Improved TF tree stability across SLAM backends
 
 ---
 
-# License
+# 🎯 Potential Applications
 
-This project is intended for educational, research, and autonomous mobile robot development using ROS 2.
+- 🏥 Hospital logistics simulation
+- 🏢 Indoor service robots
+- 🔍 SLAM algorithm benchmarking
+- 🚨 Surveillance simulation
+
+---
+
+# 👨‍💻 Author
+
+**N N Rajagopal**
+
+ROS2 | Autonomous Mobile Robots | SLAM | Navigation
+
+Portfolio: rajagopal95.github.io/Portfolio
+
+---
+
+# 📜 License
+
+This project is intended for educational, research, and autonomous mobile robot development using ROS2.
