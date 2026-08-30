@@ -35,9 +35,9 @@ pkill -9 -f cartographer
 pkill -9 -f cartographer_node
 pkill -9 -f cartographer_occupancy_grid_node
 
-pkill -9 -f rtabmap
-pkill -9 -f rgbd_odometry
-pkill -9 -f rtabmap_viz
+echo "[4b/6] Stopping laser scan filter..."
+pkill -9 -f scan_to_scan_filter_chain
+pkill -9 -f scan_filter_node
 
 echo "[5/6] Stopping robot nodes..."
 pkill -9 -f robot_state_publisher

@@ -1,10 +1,6 @@
 <?xml version="1.0"?>
 <robot name="mybot" xmlns:xacro="http://www.ros.org/wiki/xacro">
 
-  <!-- Camera is optional — only pulled in when use_camera:=true is passed
-       to xacro at robot_description-generation time (i.e. by rtabmap.launch.py) -->
-  <xacro:arg name="use_camera" default="false"/>
-  <xacro:include filename="$(find mybot_description)/urdf/camera.urdf.xacro"/>
   <!-- ============================================================
        GEOMETRY — computed so body never touches ground.
        Design rule:
@@ -263,8 +259,7 @@
           <link>left_wheel_link</link>
           <link>right_wheel_link</link>
           <link>caster_front_link</link>
-          <link>caster_back_left_link</link>
-          <link>caster_back_right_link</link>
+          <link>caster_back_link</link>
         </ignore>
       </plugin>
     </sensor>
@@ -320,10 +315,5 @@
       </plugin>
     </sensor>
   </gazebo>
-
-  <!-- ============================================================ CAMERA -->
-  <xacro:if value="$(arg use_camera)">
-    <xacro:depth_camera parent_link="base_link"/>
-  </xacro:if>
 
 </robot>

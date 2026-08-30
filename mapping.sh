@@ -2,17 +2,11 @@
 
 echo "Cleaning up previous ROS2/Gazebo processes..."
 
-pkill -9 -f gzserver
-pkill -9 -f gzclient
-pkill -9 -f gazebo
-pkill -9 -f rviz2
-pkill -9 -f ros2
-pkill -9 -f cartographer
-pkill -9 -f slam_toolbox
-pkill -9 -f rtabmap
-pkill -9 -f teleop_twist_keyboard
-pkill -9 -f scan_to_scan_filter_chain
-pkill -9 -f ekf_node
+# Single source of truth for cleanup — see kill.sh. Keeping only one list
+# avoids this script and kill.sh drifting out of sync (which is how
+# robot_state_publisher/scan_filter_node ended up missing from here before).
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+"$SCRIPT_DIR/kill.sh"
 
 sleep 2
 
@@ -36,22 +30,13 @@ echo
 echo "Select mapping method:"
 echo "1) SLAM Toolbox"
 echo "2) Cartographer"
-echo "3) RTAB-Map"
 echo
 
-read -p "Enter your choice [1-3]: " choice
+read -p "Enter your choice [1-2]: " choice
 
 echo "Starting Gazebo..."
 
-# Camera is only needed for RTAB-Map (choice 3); SLAM Toolbox/Cartographer
-# keep spawning the camera-less robot so the EKF/Cartographer TF setup
-# is unaffected.
-GAZEBO_ARGS=""
-if [ "$choice" == "3" ]; then
-    GAZEBO_ARGS="use_camera:=true"
-fi
-
-ros2 launch mybot_gazebo gazebo.launch.py $GAZEBO_ARGS > "$RUN_DIR/gazebo.log" 2>&1 &
+ros2 launch mybot_gazebo gazebo.launch.py > "$RUN_DIR/gazebo.log" 2>&1 &
 GAZEBO_PID=$!
 
 sleep 10
@@ -64,10 +49,6 @@ case $choice in
     2)
         echo "Starting Cartographer..."
         ros2 launch mybot_slam cartographer.launch.py > "$RUN_DIR/cartographer.log" 2>&1 &
-        ;;
-    3)
-        echo "Starting RTAB-Map..."
-        ros2 launch mybot_rtabmap rtabmap.launch.py > "$RUN_DIR/rtabmap.log" 2>&1 &
         ;;
     *)
         echo "Invalid choice!"
