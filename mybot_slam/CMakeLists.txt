@@ -30,6 +30,8 @@ install(DIRECTORY
   DESTINATION share/${PROJECT_NAME}
 )
 
+install(DIRECTORY rviz/ DESTINATION share/${PROJECT_NAME}/rviz)
+
 install(PROGRAMS
   scripts/save_map.py
   DESTINATION lib/${PROJECT_NAME}
