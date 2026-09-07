@@ -1,6 +1,6 @@
 # 🤖 MyBot — ROS2 SLAM Comparative Study & Navigation Stack
 
-A ROS2 workspace for autonomous mobile robot (AMR) simulation, mapping, localization, and navigation — built around a **comparative SLAM study** (SLAM Toolbox vs Cartographer vs RTAB-Map) with a full Nav2 navigation pipeline.
+A ROS2 workspace for autonomous mobile robot (AMR) simulation, mapping, localization, and navigation — built around a **comparative SLAM study** (SLAM Toolbox vs Cartographer) with a full Nav2 navigation pipeline.
 
 The workspace is developed and tested using **ROS2 Humble on Ubuntu 22.04**.
 
@@ -8,13 +8,13 @@ The workspace is developed and tested using **ROS2 Humble on Ubuntu 22.04**.
 
 # 📌 Overview
 
-`mybot_ws` simulates a differential-drive robot in Gazebo and supports three interchangeable SLAM backends, letting you map the same environment multiple ways and compare results before moving into autonomous navigation with Nav2.
+`mybot_ws` simulates a differential-drive robot in Gazebo and supports two interchangeable SLAM backends, letting you map the same environment multiple ways and compare results before moving into autonomous navigation with Nav2.
 
 The workspace contains:
 
 - Robot description (URDF/Xacro)
 - Gazebo simulation worlds
-- Three SLAM backends (SLAM Toolbox, Cartographer, RTAB-Map)
+- Two SLAM backends (SLAM Toolbox, Cartographer)
 - Nav2-based navigation with EKF-fused odometry
 - Interactive map-saving script
 - Shell scripts for one-command mapping, navigation, verification, and cleanup
@@ -24,7 +24,7 @@ The workspace contains:
 # 🚀 Features
 
 - 🤖 Autonomous Mobile Robot (AMR) simulation
-- 🗺️ Multiple SLAM algorithms — SLAM Toolbox, Cartographer, RTAB-Map
+- 🗺️ Multiple SLAM algorithms — SLAM Toolbox, Cartographer
 - 🚀 ROS2 Nav2 navigation stack
 - 📍 Localization with initial pose estimation
 - 🌍 Gazebo simulation
@@ -42,7 +42,7 @@ The workspace contains:
 | Operating System | Ubuntu 22.04 |
 | Middleware | ROS2 Humble |
 | Programming | Python |
-| SLAM | slam_toolbox, Cartographer, RTAB-Map |
+| SLAM | slam_toolbox, Cartographer |
 | Navigation | ROS2 Navigation Stack (Nav2) |
 | Sensor Fusion | robot_localization (EKF) |
 | Visualization | RViz2 |
@@ -60,7 +60,6 @@ mybot_ws/
         ├── mybot_description/     # URDF/Xacro robot model
         ├── mybot_gazebo/          # Gazebo worlds + launch + controllers
         ├── mybot_navigation/      # Nav2 launch, params, EKF, RViz config
-        ├── mybot_rtabmap/         # RTAB-Map launch package
         ├── mybot_slam/            # SLAM Toolbox + Cartographer
         │   ├── config/
         │   ├── launch/
@@ -89,7 +88,6 @@ mybot_ws/
 - RViz2
 - SLAM Toolbox
 - Cartographer
-- RTAB-Map
 - robot_localization
 
 Install required ROS2 packages:
@@ -101,7 +99,6 @@ sudo apt install \
 ros-humble-slam-toolbox \
 ros-humble-cartographer \
 ros-humble-cartographer-ros \
-ros-humble-rtabmap-ros \
 ros-humble-navigation2 \
 ros-humble-nav2-bringup \
 ros-humble-robot-localization \
@@ -162,7 +159,6 @@ You'll be prompted to choose a SLAM backend:
 
 1. SLAM Toolbox
 2. Cartographer
-3. RTAB-Map
 
 Enter your choice:
 ```
@@ -171,14 +167,13 @@ Enter your choice:
 |---|---|---|
 | `1` | **SLAM Toolbox** | Lightweight 2D lidar SLAM, good default |
 | `2` | **Cartographer** | Pose-graph SLAM, strong loop closure on larger maps |
-| `3` | **RTAB-Map** | RGB-D/visual SLAM, use for 3D or camera-based mapping |
 
 Each choice launches Gazebo, the robot model, the selected SLAM package, and RViz. Drive the robot around until the environment is fully mapped.
 
 ### Save the map
 
 ```bash
-ros2 run mybot_slam save_map
+ros2 run mybot_slam save_map.py
 ```
 
 ```text
@@ -217,7 +212,7 @@ Terminates all ROS2, Gazebo, and related processes. Run this between runs (e.g. 
 cd ~/mybot_ws && source install/setup.bash
 bash verify.sh                 # sanity check
 
-bash mapping.sh                # choose 1 / 2 / 3
+bash mapping.sh                # choose 1 / 2
 # ... drive robot around, then Ctrl+C when mapping done ...
 python3 src/mybot/mybot_slam/scripts/save_map.py
 
@@ -248,8 +243,7 @@ Run mapping.sh
        ▼
 Choose Mapping Method
  ├── SLAM Toolbox
- ├── Cartographer
- └── RTAB-Map
+ └── Cartographer
        │
        ▼
 Drive the Robot
@@ -410,8 +404,8 @@ __pycache__/
 
 The system is designed to demonstrate:
 
-- ✅ Comparative SLAM study across three backends
-- ✅ Real-time LiDAR/visual mapping
+- ✅ Comparative SLAM study across two backends
+- ✅ Real-time LiDAR mapping
 - ✅ Multi-planner Nav2 navigation (SmacPlanner2D, ThetaStar, NavFn)
 - ✅ EKF-based sensor fusion
 - ✅ Saved occupancy-grid maps
