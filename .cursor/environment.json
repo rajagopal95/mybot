@@ -1,0 +1,10 @@
+{
+  "name": "MyBot ROS2 Humble",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": "."
+  },
+  "user": "ubuntu",
+  "install": "bash .cursor/cloud-agent-install.sh",
+  "start": "bash .cursor/cloud-agent-start.sh"
+}
