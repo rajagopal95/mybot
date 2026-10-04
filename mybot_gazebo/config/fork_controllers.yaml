@@ -11,8 +11,8 @@ controller_manager:
 
 diff_drive_controller:
   ros__parameters:
-    # Axes were flipped so forward drives toward the forks. Swap the command
-    # sides so that flip does not also reverse left and right.
+    # Front panel is +X. These joint names sit on the opposite side of the
+    # robot, so the command sides are swapped to keep left and right.
     left_wheel_names: ["right_wheel_joint"]
     right_wheel_names: ["left_wheel_joint"]
 
@@ -23,8 +23,8 @@ diff_drive_controller:
     # Joint position is radians: 1 rad = 0.053 m, one revolution = 0.333 m.
     wheel_radius: 0.053
     # Axis is -1. A negative multiplier sends the opposite joint velocity so
-    # Gazebo still rolls toward the forks, and tick odometry stays positive
-    # for that same forward roll.
+    # a positive command drives toward the front panel (+X), and the wheel
+    # ticks count that same direction.
     left_wheel_radius_multiplier: -1.0
     right_wheel_radius_multiplier: -1.0
 
@@ -42,9 +42,7 @@ diff_drive_controller:
     # Integrate wheel joint position (radians), not cmd_vel. Open-loop yaw
     # followed the commanded rate, so RViz turned farther than Gazebo.
     open_loop: false
-    # Tick distance comes out opposite the Gazebo roll. fork_odom_sign.py
-    # publishes /odom and odom->base_footprint with forward negated.
-    enable_odom_tf: false
+    enable_odom_tf: true
 
     linear:
       x:

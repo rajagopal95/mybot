@@ -5,7 +5,6 @@ from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import (
     DeclareLaunchArgument,
-    ExecuteProcess,
     IncludeLaunchDescription,
     LogInfo,
     SetEnvironmentVariable,
@@ -140,22 +139,6 @@ def generate_launch_description():
         ],
     )
 
-    odom_sign = ExecuteProcess(
-        cmd=[
-            "python3",
-            os.path.normpath(os.path.join(
-                os.path.dirname(os.path.realpath(__file__)),
-                "..",
-                "scripts",
-                "fork_odom_sign.py",
-            )),
-            "--ros-args",
-            "-p",
-            "use_sim_time:=true",
-        ],
-        output="screen",
-    )
-
     scan_filter = Node(
         package="laser_filters",
         executable="scan_to_scan_filter_chain",
@@ -201,6 +184,5 @@ def generate_launch_description():
         ),
         spawn_joint_state_broadcaster,
         spawn_diff_drive,
-        odom_sign,
         scan_filter,
     ])

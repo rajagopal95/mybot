@@ -71,7 +71,9 @@
   </link>
   <joint name="base_joint" type="fixed">
     <parent link="base_footprint"/><child link="base_link"/>
-    <origin xyz="0 0 ${wheel_radius}" rpy="0 0 0"/>   <!-- base_link = wheel-axle midpoint -->
+    <!-- Yaw 180: the front panel is the front, the forks are the back.
+         Pose-estimate arrows follow +X, so +X must point at the front panel. -->
+    <origin xyz="0 0 ${wheel_radius}" rpy="0 0 ${pi}"/>
   </joint>
   <!-- Battery inside the lower chassis. CAD parts alone put the assembled
        CoM at x=+0.04 m, z=+0.41 m (tall panels). This 200 kg pack pulls the
@@ -253,7 +255,8 @@
   </link>
   <joint name="imu_joint" type="fixed">
     <parent link="imu_mount_link"/><child link="imu_link"/>
-    <origin xyz="0 0 0" rpy="0 0 ${pi/2}"/>
+    <!-- +X is the front panel, same as base_footprint, so IMU yaw matches the robot. -->
+    <origin xyz="0 0 0" rpy="0 0 ${-pi/2}"/>
   </joint>
 
   <!-- ===================== ROS2_CONTROL (same as mybot.urdf.xacro) ===================== -->
@@ -294,7 +297,7 @@
       <robot_param_node>robot_state_publisher</robot_param_node>
       <parameters>$(find mybot_gazebo)/config/fork_controllers.yaml</parameters>
       <ros>
-        <remapping>diff_drive_controller/odom:=/wheel_odom</remapping>
+        <remapping>diff_drive_controller/odom:=/odom</remapping>
         <remapping>diff_drive_controller/cmd_vel_unstamped:=/cmd_vel</remapping>
       </ros>
     </plugin>
@@ -331,7 +334,8 @@
           <horizontal>
             <samples>180</samples>
             <resolution>1</resolution>
-            <!-- 90 deg to 270 deg. 0 is +X, toward the forks. -->
+            <!-- 90 deg to 270 deg in laser_link. That frame points at the
+                 forks (the back); this window faces the front panel. -->
             <min_angle>1.5708</min_angle>
             <max_angle>4.7124</max_angle>
           </horizontal>

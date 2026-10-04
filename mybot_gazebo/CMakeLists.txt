@@ -24,6 +24,5 @@ if(BUILD_TESTING)
 endif()
 
 install(DIRECTORY launch worlds config DESTINATION share/${PROJECT_NAME})
-install(PROGRAMS scripts/fork_odom_sign.py DESTINATION lib/${PROJECT_NAME})
 
 ament_package()
