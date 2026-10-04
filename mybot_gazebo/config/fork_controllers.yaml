@@ -1,0 +1,67 @@
+controller_manager:
+  ros__parameters:
+    update_rate: 100
+
+    diff_drive_controller:
+      type: diff_drive_controller/DiffDriveController
+
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+
+diff_drive_controller:
+  ros__parameters:
+    # Axes were flipped so forward drives toward the forks. Swap the command
+    # sides so that flip does not also reverse left and right.
+    left_wheel_names: ["right_wheel_joint"]
+    right_wheel_names: ["left_wheel_joint"]
+
+    # Contact-center track, not the 0.730 m link-origin spacing.
+    # The narrower value made yaw = distance / track about 6% large.
+    wheel_separation: 0.771455
+    # Collision cylinders roll at this radius. The mesh is 0.050 m.
+    # Joint position is radians: 1 rad = 0.053 m, one revolution = 0.333 m.
+    wheel_radius: 0.053
+    # Axis is -1. A negative multiplier sends the opposite joint velocity so
+    # Gazebo still rolls toward the forks, and tick odometry stays positive
+    # for that same forward roll.
+    left_wheel_radius_multiplier: -1.0
+    right_wheel_radius_multiplier: -1.0
+
+    cmd_vel_timeout: 0.25
+    publish_rate: 50.0
+
+    use_stamped_vel: false
+
+    odom_frame_id: odom
+    base_frame_id: base_footprint
+
+    pose_covariance_diagonal: [0.001, 0.001, 0.001, 0.001, 0.001, 0.01]
+    twist_covariance_diagonal: [0.001, 0.001, 0.001, 0.001, 0.001, 0.01]
+
+    # Integrate wheel joint position (radians), not cmd_vel. Open-loop yaw
+    # followed the commanded rate, so RViz turned farther than Gazebo.
+    open_loop: false
+    # Tick distance comes out opposite the Gazebo roll. fork_odom_sign.py
+    # publishes /odom and odom->base_footprint with forward negated.
+    enable_odom_tf: false
+
+    linear:
+      x:
+        has_velocity_limits: true
+        max_velocity: 0.5
+        min_velocity: -0.5
+        has_acceleration_limits: true
+        max_acceleration: 1.0
+
+    angular:
+      z:
+        has_velocity_limits: true
+        max_velocity: 1.0
+        min_velocity: -1.0
+        has_acceleration_limits: true
+        max_acceleration: 2.0
+
+
+joint_state_broadcaster:
+  ros__parameters: {}

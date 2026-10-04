@@ -1,0 +1,389 @@
+<?xml version="1.0"?>
+<!-- fork_redesigned_urdf.xacro  (cleaned for Gazebo Classic + ros2_control)
+     Changes vs. the raw SolidWorks export:
+       * meshes now load from mybot_description (was forklift_description)
+       * +X is forward (CAD forward is +Y): base_footprint -> base_link -> chassis_link(rotated -90 deg)
+       * wheel joints renamed left_wheel_joint / right_wheel_joint, axes fixed so +vel = forward
+         (CAD "left"/"right" were mirrored w.r.t. ROS once the forks point forward)
+       * inertias recomputed about each link's COM (exporter wrote them about the assembly origin)
+       * mesh collisions replaced by simple primitives (wheels, casters, body box, forks)
+       * lift joint axis/limits fixed (old limits pushed the forks below the floor)
+       * ros2_control + gazebo_ros2_control + lidar (laser_link) + IMU (imu_link) from mybot.urdf.xacro -->
+<robot name="fork_redesigned" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:arg name="use_camera" default="false"/>  <!-- accepted for launch compatibility; no camera on this model -->
+
+  <xacro:property name="mesh_pkg"     value="package://mybot_description/meshes"/>
+  <xacro:property name="mesh_scale"   value="0.001"/>
+
+  <!-- wheel_radius ~0.053 m is derived from the exported wheel inertia (solid disc). Verify against
+       left_wheel_link.stl bounding box and keep controllers.yaml wheel_radius identical. -->
+  <xacro:property name="wheel_radius"     value="0.053"/>
+  <xacro:property name="wheel_width"      value="0.04"/>
+  <!-- Contact centers are 0.771 m apart (link origins are 0.730 m; the collision
+       cylinders sit outboard of those origins). Odometry uses the contact track. -->
+  <xacro:property name="wheel_separation" value="0.771455"/>
+
+  <material name="grey"><color rgba="0.7 0.7 0.7 1"/></material>
+  <material name="black"><color rgba="0.1 0.1 0.1 1"/></material>
+
+  <!-- visual-only link (inertia about COM) -->
+  <xacro:macro name="mesh_link" params="name mesh ox oy oz rr rp ry mass cx cy cz ixx ixy ixz iyy iyz izz">
+    <link name="${name}">
+      <visual>
+        <origin xyz="${ox} ${oy} ${oz}" rpy="${rr} ${rp} ${ry}"/>
+        <geometry><mesh filename="${mesh_pkg}/${mesh}.stl" scale="${mesh_scale} ${mesh_scale} ${mesh_scale}"/></geometry>
+        <material name="grey"/>
+      </visual>
+      <inertial>
+        <origin xyz="${cx} ${cy} ${cz}" rpy="0 0 0"/>
+        <mass value="${mass}"/>
+        <inertia ixx="${ixx}" ixy="${ixy}" ixz="${ixz}" iyy="${iyy}" iyz="${iyz}" izz="${izz}"/>
+      </inertial>
+    </link>
+  </xacro:macro>
+
+  <!-- same, plus a primitive collision passed as a block -->
+  <xacro:macro name="mesh_link_col" params="name mesh ox oy oz rr rp ry mass cx cy cz ixx ixy ixz iyy iyz izz *col">
+    <link name="${name}">
+      <visual>
+        <origin xyz="${ox} ${oy} ${oz}" rpy="${rr} ${rp} ${ry}"/>
+        <geometry><mesh filename="${mesh_pkg}/${mesh}.stl" scale="${mesh_scale} ${mesh_scale} ${mesh_scale}"/></geometry>
+        <material name="grey"/>
+      </visual>
+      <xacro:insert_block name="col"/>
+      <inertial>
+        <origin xyz="${cx} ${cy} ${cz}" rpy="0 0 0"/>
+        <mass value="${mass}"/>
+        <inertia ixx="${ixx}" ixy="${ixy}" ixz="${ixz}" iyy="${iyy}" iyz="${iyz}" izz="${izz}"/>
+      </inertial>
+    </link>
+  </xacro:macro>
+
+  <!-- ===================== ROS base frames (x forward, z up) ===================== -->
+  <!-- Tiny inertia so Gazebo does not invent a 1 kg CoM on the floor. -->
+  <link name="base_footprint">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.01"/>
+      <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6"/>
+    </inertial>
+  </link>
+  <joint name="base_joint" type="fixed">
+    <parent link="base_footprint"/><child link="base_link"/>
+    <origin xyz="0 0 ${wheel_radius}" rpy="0 0 0"/>   <!-- base_link = wheel-axle midpoint -->
+  </joint>
+  <!-- Battery inside the lower chassis. CAD parts alone put the assembled
+       CoM at x=+0.04 m, z=+0.41 m (tall panels). This 200 kg pack pulls the
+       model CoM to about x=+0.12 m, z=+0.25 m, inside the body and over the
+       wheelbase, so the robot sits still until cmd_vel is applied.
+       Inertia is a 0.30 x 0.25 x 0.12 m box. -->
+  <link name="base_link">
+    <inertial>
+      <origin xyz="0.15 0 0.13" rpy="0 0 0"/>
+      <mass value="200.0"/>
+      <inertia ixx="0.64" ixy="0" ixz="0" iyy="1.74" iyz="0" izz="2.29"/>
+    </inertial>
+  </link>
+  <!-- CAD root (forward = +Y) rotated so CAD +Y -> ROS +X; origin placed so the wheel-axle midpoint is at base_link origin -->
+  <joint name="chassis_joint" type="fixed">
+    <parent link="base_link"/><child link="chassis_link"/>
+    <origin xyz="-0.607380795 -0.2189775 0.034" rpy="0 0 ${-pi/2}"/>
+  </joint>
+
+  <!-- ===================== LINKS ===================== -->
+
+  <xacro:mesh_link_col name="chassis_link" mesh="base_link" ox="0" oy="0" oz="0" rr="0" rp="-0" ry="0" mass="8.10420284" cx="-0.218971913" cy="0.607435227" cz="0.0025" ixx="0.060414" ixy="-9.82363e-09" ixz="1.19629e-11" iyy="0.311763" iyz="2.94236e-11" izz="0.372143">
+    <collision>
+        <!-- simple body box (CAD frame): panels span x -0.54..0.10, y 0.45..0.77, z 0..0.68.
+             Top is kept just BELOW the lidar plane (z=0.696) so the lidar never sees the body. -->
+        <origin xyz="-0.219 0.61 0.34" rpy="0 0 0"/>
+        <geometry><box size="0.66 0.33 0.68"/></geometry>
+      </collision>
+  </xacro:mesh_link_col>
+  <xacro:mesh_link name="left_holder_link" mesh="left_holder_link" ox="-0.008" oy="-0.005" oz="-1.33226763e-17" rr="-3.14159265" rp="2.77555756e-16" ry="1.57079633" mass="0.0616621529" cx="0.0216206991" cy="0.015" cz="-0.0101518474" ixx="1.89239e-05" ixy="2.12475e-12" ixz="6.06948e-06" iyy="2.15824e-05" iyz="8.0687e-13" izz="1.96835e-05"/>
+  <xacro:mesh_link name="right_holder_link" mesh="right_holder_link" ox="0.008" oy="0.005" oz="0" rr="3.14159265" rp="3.88578059e-16" ry="-1.57079633" mass="0.0616621529" cx="-0.0216206991" cy="-0.015" cz="-0.0101518474" ixx="1.89239e-05" ixy="3.31922e-11" ixz="-6.06948e-06" iyy="2.15825e-05" iyz="8.0687e-13" izz="1.96835e-05"/>
+  <xacro:mesh_link name="right_slot_link" mesh="right_slot_link" ox="0.017" oy="-5.55111512e-17" oz="0.02" rr="-1.57079633" rp="3.45688629e-14" ry="-1.2246468e-16" mass="0.730873983" cx="0.017" cy="0.25" cz="0.02" ixx="0.0153345" ixy="2.64752e-10" ixz="-1.86446e-12" iyy="0.000215894" iyz="5.45464e-11" izz="0.0153345"/>
+  <xacro:mesh_link name="left_slot_link" mesh="left_slot_link" ox="-0.017" oy="1.66533454e-16" oz="0.02" rr="-1.57079633" rp="2.41451146e-14" ry="-6.69535287e-17" mass="0.730873983" cx="-0.017" cy="0.25" cz="0.02" ixx="0.0153345" ixy="2.9992e-11" ixz="3.58991e-12" iyy="0.000215894" iyz="5.45464e-11" izz="0.0153345"/>
+  <xacro:mesh_link name="rear_slot_link" mesh="rear_slot_link" ox="-0.272" oy="-0.017" oz="0.02" rr="1.57772181e-30" rp="1.57079629" ry="0" mass="0.795190893" cx="1.08246745e-15" cy="-0.017" cz="0.02" ixx="0.000234892" ixy="-3.54108e-10" ixz="3.54952e-12" iyy="0.0197279" iyz="3.7475e-11" izz="0.0197279"/>
+  <xacro:mesh_link name="left_motor_link" mesh="left_motor_link" ox="-0.1325" oy="-0.607380795" oz="0.034" rr="-1.57079633" rp="7.07767178e-16" ry="-1.57079633" mass="0.127849876" cx="-0.0257459503" cy="-5.36493923e-06" cz="0.00667674448" ixx="2.28358e-05" ixy="-2.59308e-09" ixz="1.59683e-06" iyy="5.62893e-05" iyz="3.12807e-09" izz="5.60428e-05"/>
+  <xacro:mesh_link name="right_motor_link" mesh="right_motor_link" ox="0.570455" oy="-0.607380795" oz="0.034" rr="0" rp="0" ry="0" mass="0.127849876" cx="0.0257459503" cy="1.69131048e-06" cz="0.0066762682" ixx="2.28366e-05" ixy="-2.32975e-08" ixz="-1.59954e-06" iyy="5.62904e-05" iyz="-6.85699e-09" izz="5.60427e-05"/>
+  <xacro:mesh_link_col name="right_caster_link" mesh="right_caster_link" ox="0.493954692" oy="-0.954880795" oz="-0.005" rr="0" rp="0" ry="0" mass="0.122715632" cx="-0.0325000884" cy="-0.0104017259" cz="-0.0394206707" ixx="0.000158658" ixy="5.43329e-11" ixz="-1.56107e-11" iyy="9.14687e-05" iyz="4.81359e-05" izz="0.000100934">
+    <collision>
+        <origin xyz="-0.0325000884 -0.0104017259 -0.0394206707" rpy="0 0 0"/>
+        <geometry><sphere radius="${wheel_radius}"/></geometry>
+      </collision>
+  </xacro:mesh_link_col>
+  <xacro:mesh_link name="bottom_front_link" mesh="bottom_front_link" ox="-0.085" oy="0.02" oz="-0.017" rr="-9.65639719e-15" rp="1.57079631" ry="0" mass="0.795190893" cx="0.272" cy="0.02" cz="-0.017" ixx="0.000234892" ixy="-2.73803e-11" ixz="3.5495e-12" iyy="0.0197279" iyz="-3.885e-12" izz="0.0197279"/>
+  <xacro:mesh_link name="front_right_link" mesh="front_right_link" ox="0.017" oy="0.02" oz="-2.8449465e-16" rr="-2.74172418e-16" rp="1.62347755e-14" ry="-9.33550431e-16" mass="0.950136178" cx="0.017" cy="0.02" cz="0.325" ixx="0.033593" ixy="-4.08587e-10" ixz="-1.29577e-10" iyy="0.033593" iyz="-2.80246e-10" izz="0.000280661"/>
+  <xacro:mesh_link_col name="left_caster_link" mesh="left_caster_link" ox="-0.0560453082" oy="-0.954880795" oz="-0.005" rr="0" rp="0" ry="0" mass="0.122715632" cx="0.0324999116" cy="-0.0104017259" cz="-0.0394206707" ixx="0.000158658" ixy="-2.09129e-10" ixz="-2.12638e-12" iyy="9.14686e-05" iyz="4.81359e-05" izz="0.000100933">
+    <collision>
+        <origin xyz="0.0324999116 -0.0104017259 -0.0394206707" rpy="0 0 0"/>
+        <geometry><sphere radius="${wheel_radius}"/></geometry>
+      </collision>
+  </xacro:mesh_link_col>
+  <xacro:mesh_link name="front_left_link" mesh="front_left_link" ox="-0.017" oy="0.02" oz="7.35522754e-16" rr="9.54583266e-17" rp="1.4958019e-14" ry="6.67368626e-15" mass="0.950136178" cx="-0.017" cy="0.02" cz="0.325" ixx="0.033593" ixy="4.47235e-11" ixz="-1.70271e-11" iyy="0.033593" iyz="-2.80246e-10" izz="0.000280661"/>
+  <xacro:mesh_link name="rear_right_link" mesh="rear_right_link" ox="-0.02" oy="-0.006" oz="7.35522754e-16" rr="-6.87084465e-17" rp="-3.31929942e-14" ry="-3.14159265" mass="1.60792276" cx="-0.02" cy="-0.006" cz="0.55" ixx="0.16237" ixy="9.39196e-10" ixz="2.35624e-10" iyy="0.16237" iyz="-1.45384e-09" izz="0.000474971"/>
+  <xacro:mesh_link_col name="right_wheel_link" mesh="left_wheel_link" ox="0.0421400664" oy="2.22044605e-16" oz="-7.63278329e-17" rr="-1.57079633" rp="-0.88442369" ry="1.57079633" mass="1.94018977" cx="0.0199986545" cy="3.98736599e-12" cz="5.24946753e-12" ixx="0.00271534" ixy="-2.90409e-10" ixz="-1.53704e-11" iyy="0.00164201" iyz="-1.55898e-10" izz="0.00164201">
+    <collision>
+        <origin xyz="0.0199986545 0 0" rpy="0 ${pi/2} 0"/>
+        <geometry><cylinder radius="${wheel_radius}" length="${wheel_width}"/></geometry>
+      </collision>
+  </xacro:mesh_link_col>
+  <xacro:mesh_link_col name="left_wheel_link" mesh="right_wheel_link" ox="0.00114006642" oy="-1.44328993e-15" oz="2.08166817e-17" rr="1.57079633" rp="1.14228184" ry="-1.57079633" mass="1.94018977" cx="-0.0210013455" cy="-2.51798582e-12" cz="-6.09272355e-12" ixx="0.00271534" ixy="-6.65281e-10" ixz="-4.33875e-11" iyy="0.00164201" iyz="-1.82028e-10" izz="0.00164201">
+    <collision>
+        <origin xyz="-0.0210013455 0 0" rpy="0 ${pi/2} 0"/>
+        <geometry><cylinder radius="${wheel_radius}" length="${wheel_width}"/></geometry>
+      </collision>
+  </xacro:mesh_link_col>
+  <xacro:mesh_link name="right_panel_link" mesh="right_panel_link" ox="-2.88657986e-15" oy="0" oz="-0.2" rr="-3.14159265" rp="-1.62347755e-14" ry="3.14159265" mass="8.15773962" cx="-0.0025" cy="0.1505" cz="-0.34525" ixx="0.385719" ixy="5.77111e-10" ixz="-6.2205e-10" iyy="0.324145" iyz="-2.63235e-09" izz="0.0616086"/>
+  <xacro:mesh_link name="top_tray_link" mesh="top_tray_link" ox="-0.0540000014" oy="-0.495000007" oz="-0.6995" rr="-1.28124608e-15" rp="-7.63278329e-16" ry="6.67368626e-15" mass="7.26598419" cx="-0.273067572" cy="0.113454619" cz="-0.002" ixx="0.0545002" ixy="8.13456e-05" ixz="4.5345e-09" iyy="0.222662" iyz="2.08025e-09" izz="0.277132"/>
+  <xacro:mesh_link name="left_panel_link" mesh="left_panel_link" ox="-3.01147995e-15" oy="0" oz="-0.2" rr="-6.73462155e-17" rp="1.4958019e-14" ry="-1.2490009e-16" mass="8.15773962" cx="0.0025" cy="0.1505" cz="-0.34525" ixx="0.385719" ixy="1.68008e-10" ixz="-2.63662e-10" iyy="0.324145" iyz="-2.63234e-09" izz="0.0616086"/>
+  <xacro:mesh_link name="front_panel_link" mesh="front_panel_link" ox="-0.618" oy="-0.005" oz="0.15" rr="9.54583266e-17" rp="1.57198695e-14" ry="1.57772181e-30" mass="16.8703958" cx="-0.309" cy="-0.0025" cz="-0.34775" ixx="0.680081" ixy="-5.93714e-09" ixz="-5.66592e-09" iyy="1.21698" iyz="1.39631e-08" izz="0.536969"/>
+  <xacro:mesh_link name="lead_top_link" mesh="lead_top_link" ox="0.627" oy="0.017" oz="0.02" rr="9.54347648e-15" rp="-1.57079615" ry="0" mass="0.916515974" cx="0.3135" cy="0.017" cz="0.02" ixx="0.000270732" ixy="-9.77949e-11" ixz="-1.47726e-10" iyy="0.0301611" iyz="-7.07412e-10" izz="0.0301611"/>
+  <xacro:mesh_link name="back_panel_link" mesh="back_panel_link" ox="2.85327317e-14" oy="0.005" oz="0.8455" rr="-3.14159265" rp="3.31317618e-14" ry="-7.41153826e-22" mass="15.766725" cx="0.309" cy="0.0025" cz="0.325" ixx="0.555153" ixy="2.064e-09" ixz="-4.00277e-09" iyy="1.05693" iyz="-2.27498e-09" izz="0.50184"/>
+  <xacro:mesh_link name="lidar_link" mesh="lidar_link" ox="0.000403974784" oy="0.0042" oz="0.0372" rr="1.71424218e-42" rp="2.54530497e-28" ry="-1.57079633" mass="0.0130646914" cx="5.93694919e-08" cy="-0.0075331509" cz="0.015" ixx="1.5693e-05" ixy="-1.11085e-12" ixz="5.6645e-12" iyy="3.75573e-06" iyz="1.593e-12" izz="1.76327e-05"/>
+  <xacro:mesh_link name="imu_mount_link" mesh="imu_link" ox="0.219076017" oy="-0.607703715" oz="-0.6955" rr="0" rp="0" ry="0" mass="0.000637711563" cx="0.000465774734" cy="-7.45291117e-05" cz="0.00113525574" ixx="1e-06" ixy="1.06617e-23" ixz="-3.56498e-23" iyy="1e-06" iyz="4.57908e-23" izz="1e-06"/>
+  <xacro:mesh_link name="rear_left_link" mesh="rear_left_link" ox="-0.02" oy="-0.017" oz="-1.1" rr="-3.26484926e-16" rp="-3.3137483e-14" ry="-3.14159265" mass="1.60792276" cx="-0.02" cy="-0.017" cz="-0.55" ixx="0.16237" ixy="-3.23668e-10" ixz="-2.92981e-10" iyy="0.16237" iyz="-1.45389e-09" izz="0.000474968"/>
+  <xacro:mesh_link name="lead_holder_link_1" mesh="lead_holder_link_1" ox="-0.02" oy="0" oz="0.02" rr="-1.57079633" rp="6.17514307e-14" ry="-1.45571402e-27" mass="0.0616621529" cx="1.66408554e-12" cy="0.0101518474" cz="-0.00962069911" ixx="2.15828e-05" ixy="-4.7909e-11" ixz="-5.92273e-11" iyy="1.96835e-05" iyz="6.06949e-06" izz="1.89239e-05"/>
+  <xacro:mesh_link name="lead_holder_link" mesh="lead_holder_link" ox="1.38777878e-16" oy="0.03" oz="0.017" rr="1.64168196e-14" rp="-1.57079617" ry="0" mass="0.912130731" cx="-0.312" cy="0.03" cz="0.017" ixx="0.000269435" ixy="-4.32329e-10" ixz="-2.72253e-12" iyy="0.0297315" iyz="-7.45695e-13" izz="0.0297315"/>
+  <xacro:mesh_link name="lead_motor_link" mesh="lead_motor_link" ox="0.217454692" oy="-0.7968" oz="-1.1539" rr="0" rp="0" ry="0" mass="0.127849876" cx="-5.85919203e-06" cy="-0.00667536128" cz="0.0257459503" ixx="5.62926e-05" ixy="-3.00955e-09" ixz="-1.28705e-10" iyy="5.60431e-05" iyz="1.6046e-06" izz="2.28384e-05"/>
+  <xacro:mesh_link name="bottom_screw_link" mesh="bottom_screw_link" ox="0.0015" oy="-0.0015" oz="-2.77555756e-17" rr="-3.14159265" rp="-4.39231984e-15" ry="1.64168196e-14" mass="0.0149586328" cx="0.0015" cy="-0.0015" cz="0.0109316103" ixx="2.46971e-06" ixy="-8.43611e-12" ixz="-7.40033e-13" iyy="2.46971e-06" iyz="5.59674e-13" izz="1e-06"/>
+  <xacro:mesh_link name="forklift_coupling" mesh="forklift_coupling" ox="0.15" oy="-0.15" oz="-0.005" rr="-2.75419393e-16" rp="-1.85041897e-31" ry="-6.71855004e-16" mass="0.0321116421" cx="-1.57895919e-12" cy="-2.32293317e-08" cz="-0.0147062385" ixx="5.11321e-06" ixy="-1.64354e-11" ixz="-2.0498e-11" iyy="5.10453e-06" iyz="5.49048e-11" izz="1e-06"/>
+  <xacro:mesh_link name="lead_screw_link" mesh="lead_screw_link" ox="8.32667268e-17" oy="-2.22044605e-16" oz="-1" rr="1.57079633" rp="-1.85041897e-31" ry="-6.71855004e-16" mass="0.310404692" cx="-2.40394352e-05" cy="-4.8968337e-07" cz="-0.498704067" ixx="0.0264577" ixy="1.06609e-08" ixz="1.82358e-06" iyy="0.0264577" iyz="-5.21428e-07" izz="1.00014e-06"/>
+  <xacro:mesh_link name="center_holder_link" mesh="center_holder_link" ox="-0.2" oy="-0.25" oz="0.005" rr="2.07042645e-15" rp="8.41340319e-16" ry="-6.71855004e-16" mass="0.0636934009" cx="0" cy="0.012088699" cz="0.00121152" ixx="1.32141e-05" ixy="2.96896e-12" ixz="4.20221e-12" iyy="9.7288e-06" iyz="3.5826e-06" izz="1.30683e-05"/>
+  <xacro:mesh_link name="center_screw_link" mesh="center_screw_link" ox="5.55111512e-17" oy="-4.4408921e-16" oz="-1.11022302e-16" rr="2.06766524e-15" rp="1.05644603e-15" ry="-6.71855004e-16" mass="0.0120485191" cx="2.6848987e-07" cy="3.58281948e-07" cz="-0.00348950414" ixx="1e-06" ixy="1.51509e-22" ixz="2.41736e-23" iyy="1e-06" iyz="4.7113e-23" izz="1e-06"/>
+  <xacro:mesh_link name="fork_link" mesh="fork_link" ox="0.25" oy="0.02" oz="-0.0114" rr="-5.72118873e-18" rp="-1.57079629" ry="0" mass="0.730873983" cx="-7.21644966e-16" cy="0.02" cz="-0.0114" ixx="0.000215894" ixy="2.34625e-10" ixz="-1.64315e-11" iyy="0.0153345" iyz="2.59913e-11" izz="0.0153345"/>
+  <xacro:mesh_link name="left_fork_h_link" mesh="left_fork_h_link" ox="-0.017" oy="0.02" oz="-0.15" rr="2.07042645e-15" rp="8.56143293e-16" ry="4.93879172e-16" mass="0.219262195" cx="-0.017" cy="0.02" cz="-0.075" ixx="0.000443501" ixy="-2.59726e-11" ixz="-1.77696e-12" iyy="0.000443501" iyz="4.64424e-11" izz="6.47679e-05"/>
+  <xacro:mesh_link name="right_fork_h_link" mesh="right_fork_h_link" ox="0.017" oy="0.02" oz="-0.15" rr="3.14159265" rp="-8.26537346e-16" ry="3.14159265" mass="0.219262195" cx="0.017" cy="0.02" cz="-0.075" ixx="0.000443501" ixy="-5.75116e-11" ixz="-3.95448e-12" iyy="0.000443501" iyz="4.64424e-11" izz="6.47681e-05"/>
+  <xacro:mesh_link_col name="left_fork_link" mesh="left_fork_link" ox="-0.017" oy="0.5" oz="0.02" rr="1.57079633" rp="1.23495037e-15" ry="4.97899625e-17" mass="1.46174797" cx="-0.017" cy="0.5" cz="0.02" ixx="0.122028" ixy="-2.268e-10" ixz="-4.95408e-13" iyy="0.000431788" iyz="2.14341e-11" izz="0.122028">
+    <collision>
+        <origin xyz="-0.017 0.5 0.02" rpy="0 0 0"/>
+        <geometry><box size="0.04 1.0 0.04"/></geometry>
+      </collision>
+  </xacro:mesh_link_col>
+  <xacro:mesh_link_col name="right_fork_link" mesh="right_fork_link" ox="0.02" oy="0.5" oz="0.017" rr="1.57079633" rp="-4.47730267e-16" ry="3.14159265" mass="1.46174797" cx="0.02" cy="0.5" cz="0.017" ixx="0.122028" ixy="-3.33411e-09" ixz="-9.5039e-13" iyy="0.000431786" iyz="1.95695e-12" izz="0.122028">
+    <collision>
+        <origin xyz="0.02 0.5 0.017" rpy="0 0 0"/>
+        <geometry><box size="0.04 1.0 0.04"/></geometry>
+      </collision>
+  </xacro:mesh_link_col>
+
+  <!-- ===================== JOINTS ===================== -->
+  <joint name="base_link_to_left_holder_link" type="fixed"><parent link="chassis_link"/><child link="left_holder_link"/><origin xyz="0.098 0.592380795 0" rpy="0 0 0"/></joint>
+  <joint name="base_link_to_right_holder_link" type="fixed"><parent link="chassis_link"/><child link="right_holder_link"/><origin xyz="-0.535955 0.622380795 0" rpy="0 0 0"/></joint>
+  <joint name="base_link_to_right_slot_link" type="fixed"><parent link="chassis_link"/><child link="right_slot_link"/><origin xyz="-0.527954692 0.454880795 0.005" rpy="0 0 0"/></joint>
+  <joint name="base_link_to_left_slot_link" type="fixed"><parent link="chassis_link"/><child link="left_slot_link"/><origin xyz="0.0900453082 0.454880795 0.005" rpy="0 0 0"/></joint>
+  <joint name="base_link_to_rear_slot_link" type="fixed"><parent link="chassis_link"/><child link="rear_slot_link"/><origin xyz="-0.218954692 0.76 0.005" rpy="0 0 0"/></joint>
+  <joint name="left_holder_link_to_left_motor_link" type="fixed"><parent link="left_holder_link"/><child link="left_motor_link"/><origin xyz="0.0345 0.0149999999 -0.034" rpy="0 0 0"/></joint>
+  <joint name="right_holder_link_to_right_motor_link" type="fixed"><parent link="right_holder_link"/><child link="right_motor_link"/><origin xyz="-0.0345 -0.0149999999 -0.034" rpy="0 0 0"/></joint>
+  <joint name="right_slot_link_to_right_caster_link" type="fixed"><parent link="right_slot_link"/><child link="right_caster_link"/><origin xyz="0.034 0.5 -9.05525654e-16" rpy="0 0 0"/></joint>
+  <joint name="right_slot_link_to_bottom_front_link" type="fixed"><parent link="right_slot_link"/><child link="bottom_front_link"/><origin xyz="0.037 -1.11022302e-16 0.037" rpy="0 0 0"/></joint>
+  <joint name="right_slot_link_to_front_right_link" type="fixed"><parent link="right_slot_link"/><child link="front_right_link"/><origin xyz="1.22124533e-15 -1.11022302e-16 0.04" rpy="0 0 0"/></joint>
+  <joint name="left_slot_link_to_left_caster_link" type="fixed"><parent link="left_slot_link"/><child link="left_caster_link"/><origin xyz="-0.034 0.5 1.04170145e-15" rpy="0 0 0"/></joint>
+  <joint name="left_slot_link_to_front_left_link" type="fixed"><parent link="left_slot_link"/><child link="front_left_link"/><origin xyz="9.02056208e-16 2.22044605e-16 0.04" rpy="0 0 0"/></joint>
+  <joint name="rear_slot_link_to_rear_right_link" type="fixed"><parent link="rear_slot_link"/><child link="rear_right_link"/><origin xyz="-0.272 -0.0112 0.04" rpy="0 0 0"/></joint>
+  <joint name="right_wheel_joint" type="continuous">
+    <parent link="left_motor_link"/><child link="right_wheel_link"/>
+    <origin xyz="0.01375 -4.4408921e-16 -1.66533454e-16" rpy="0 0 0"/>
+    <!-- -1 with the negative radius multipliers in fork_controllers.yaml.
+         Both flips cancel, so a forward command still drives toward the forks
+         and wheel-tick odometry keeps that same sign. -->
+    <axis xyz="-1 0 0"/>
+    <dynamics damping="0.2" friction="0.0"/>
+
+    <limit effort="300" velocity="20"/>
+  </joint>
+  <joint name="left_wheel_joint" type="continuous">
+    <parent link="right_motor_link"/><child link="left_wheel_link"/>
+    <origin xyz="-0.01375 0 -3.46944695e-17" rpy="0 0 0"/>
+    <axis xyz="-1 0 0"/>   <!-- same sign as right_wheel_joint -->
+    <dynamics damping="0.2" friction="0.0"/>
+    <limit effort="300" velocity="20"/>
+  </joint>
+  <joint name="front_right_link_to_right_panel_link" type="fixed"><parent link="front_right_link"/><child link="right_panel_link"/><origin xyz="-0.003 0.003 0.65" rpy="0 0 0"/></joint>
+  <joint name="front_left_link_to_top_tray_link" type="fixed"><parent link="front_left_link"/><child link="top_tray_link"/><origin xyz="-0.0361213203 0.0391213203 0.65" rpy="0 0 0"/></joint>
+  <joint name="front_left_link_to_left_panel_link" type="fixed"><parent link="front_left_link"/><child link="left_panel_link"/><origin xyz="0.003 0.003 0.65" rpy="0 0 0"/></joint>
+  <joint name="front_left_link_to_front_panel_link" type="fixed"><parent link="front_left_link"/><child link="front_panel_link"/><origin xyz="1.02834408e-14 2.22044605e-16 0.65" rpy="0 0 0"/></joint>
+  <joint name="rear_right_link_to_lead_top_link" type="fixed"><parent link="rear_right_link"/><child link="lead_top_link"/><origin xyz="-0.04 -0.023 1.1" rpy="0 0 0"/></joint>
+  <joint name="rear_right_link_to_back_panel_link" type="fixed"><parent link="rear_right_link"/><child link="back_panel_link"/><origin xyz="-0.037 0.014 1.30451205e-15" rpy="0 0 0"/></joint>
+  <joint name="top_tray_link_to_lidar_link" type="fixed"><parent link="top_tray_link"/><child link="lidar_link"/><origin xyz="-0.273000005 0.1137016 0.0005" rpy="0 0 0"/></joint>
+  <joint name="top_tray_link_to_imu_link" type="fixed"><parent link="top_tray_link"/><child link="imu_mount_link"/><origin xyz="-0.273000005 0.1137016 0.0005" rpy="0 0 0"/></joint>
+  <joint name="lead_top_link_to_rear_left_link" type="fixed"><parent link="lead_top_link"/><child link="rear_left_link"/><origin xyz="0.627 0.034 -3.77475828e-14" rpy="0 0 0"/></joint>
+  <joint name="lead_top_link_to_lead_holder_link_1" type="fixed"><parent link="lead_top_link"/><child link="lead_holder_link_1"/><origin xyz="0.3135 0.037 0.0314" rpy="0 0 0"/></joint>
+  <joint name="rear_left_link_to_lead_holder_link" type="fixed"><parent link="rear_left_link"/><child link="lead_holder_link"/><origin xyz="-0.003 0.003 -1.1" rpy="0 0 0"/></joint>
+  <joint name="lead_holder_link_1_to_lead_motor_link" type="fixed"><parent link="lead_holder_link_1"/><child link="lead_motor_link"/><origin xyz="-7.04094838e-11 0.034 -0.0225" rpy="0 0 0"/></joint>
+  <joint name="lead_holder_link_to_bottom_screw_link" type="fixed"><parent link="lead_holder_link"/><child link="bottom_screw_link"/><origin xyz="-0.312 0.0358 0.037" rpy="0 0 0"/></joint>
+  <joint name="lead_motor_link_to_forklift_coupling" type="fixed"><parent link="lead_motor_link"/><child link="forklift_coupling"/><origin xyz="-8.32667268e-17 0 -0.02475" rpy="0 0 0"/></joint>
+  <joint name="forklift_coupling_to_lead_screw_link" type="fixed"><parent link="forklift_coupling"/><child link="lead_screw_link"/><origin xyz="0 0 -0.0175" rpy="0 0 0"/></joint>
+  <!-- Lift: CAD zero pose = forks lowest. Axis now +Z (was -Z with limits 0.3..0.9,
+       which drove the forks 0.17-0.77 m below the floor). Adjust upper to your mast. -->
+  <joint name="forklift_coupling_to_center_holder_link" type="prismatic">
+    <parent link="forklift_coupling"/><child link="center_holder_link"/>
+    <!-- Child frame placed at the carriage CoM (~0.96 m down the mast) so ODE
+         does not see a 1 m lever arm on a 64 g link. -->
+    <origin xyz="0 0 -0.995" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <dynamics damping="200" friction="50"/>
+    <limit lower="0.0" upper="0.8" effort="500" velocity="0.2"/>
+  </joint>
+  <joint name="center_holder_link_to_center_screw_link" type="fixed"><parent link="center_holder_link"/><child link="center_screw_link"/><origin xyz="-5.55111512e-17 3.33066907e-16 0.005" rpy="0 0 0"/></joint>
+  <joint name="center_holder_link_to_fork_link" type="fixed"><parent link="center_holder_link"/><child link="fork_link"/><origin xyz="-2.77555756e-17 0.0235407002 -0.0065" rpy="0 0 0"/></joint>
+  <joint name="fork_link_to_left_fork_h_link" type="fixed"><parent link="fork_link"/><child link="left_fork_h_link"/><origin xyz="0.25 0.04 0.0056" rpy="0 0 0"/></joint>
+  <joint name="fork_link_to_right_fork_h_link" type="fixed"><parent link="fork_link"/><child link="right_fork_h_link"/><origin xyz="-0.25 0.04 0.0056" rpy="0 0 0"/></joint>
+  <joint name="left_fork_h_link_to_left_fork_link" type="fixed"><parent link="left_fork_h_link"/><child link="left_fork_link"/><origin xyz="6.9388939e-18 0.04 -0.15" rpy="0 0 0"/></joint>
+  <joint name="right_fork_h_link_to_right_fork_link" type="fixed"><parent link="right_fork_h_link"/><child link="right_fork_link"/><origin xyz="-2.77555756e-16 0.04 -0.15" rpy="0 0 0"/></joint>
+
+  <!-- ===================== SENSOR FRAMES (ROS convention, x forward) ===================== -->
+  <link name="laser_link">
+    <inertial>
+      <mass value="0.001"/>
+      <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6"/>
+    </inertial>
+  </link>
+  <joint name="laser_joint" type="fixed">
+    <parent link="lidar_link"/><child link="laser_link"/>
+    <origin xyz="0 0 0" rpy="0 0 ${pi/2}"/>
+  </joint>
+  <link name="imu_link">
+    <inertial>
+      <mass value="0.001"/>
+      <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6"/>
+    </inertial>
+  </link>
+  <joint name="imu_joint" type="fixed">
+    <parent link="imu_mount_link"/><child link="imu_link"/>
+    <origin xyz="0 0 0" rpy="0 0 ${pi/2}"/>
+  </joint>
+
+  <!-- ===================== ROS2_CONTROL (same as mybot.urdf.xacro) ===================== -->
+  <ros2_control name="GazeboSystem" type="system">
+    <hardware>
+      <plugin>gazebo_ros2_control/GazeboSystem</plugin>
+    </hardware>
+    <joint name="left_wheel_joint">
+      <command_interface name="velocity">
+        <param name="min">-10</param>
+        <param name="max">10</param>
+      </command_interface>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+    <joint name="right_wheel_joint">
+      <command_interface name="velocity">
+        <param name="min">-10</param>
+        <param name="max">10</param>
+      </command_interface>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+    <!-- Lift: state-only (passive) so joint_state_broadcaster publishes it and
+         robot_state_publisher can emit TF for the whole fork carriage subtree.
+         Add a position command interface + controller later to actuate it. -->
+    <joint name="forklift_coupling_to_center_holder_link">
+      <state_interface name="position">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+      <state_interface name="velocity"/>
+    </joint>
+  </ros2_control>
+
+  <gazebo>
+    <plugin name="gazebo_ros2_control" filename="libgazebo_ros2_control.so">
+      <robot_param>robot_description</robot_param>
+      <robot_param_node>robot_state_publisher</robot_param_node>
+      <parameters>$(find mybot_gazebo)/config/fork_controllers.yaml</parameters>
+      <ros>
+        <remapping>diff_drive_controller/odom:=/wheel_odom</remapping>
+        <remapping>diff_drive_controller/cmd_vel_unstamped:=/cmd_vel</remapping>
+      </ros>
+    </plugin>
+  </gazebo>
+
+  <!-- ===================== GAZEBO LINK PROPS ===================== -->
+  <gazebo reference="chassis_link">
+    <material>Gazebo/Grey</material>
+    <self_collide>false</self_collide>
+  </gazebo>
+  <gazebo reference="left_wheel_link">
+    <material>Gazebo/Black</material>
+    <mu1>1.2</mu1><mu2>1.2</mu2><kp>1000000.0</kp><kd>100.0</kd><minDepth>0.001</minDepth><maxVel>1.0</maxVel>
+  </gazebo>
+  <gazebo reference="right_wheel_link">
+    <material>Gazebo/Black</material>
+    <mu1>1.2</mu1><mu2>1.2</mu2><kp>1000000.0</kp><kd>100.0</kd><minDepth>0.001</minDepth><maxVel>1.0</maxVel>
+  </gazebo>
+  <gazebo reference="left_caster_link">
+    <mu1>0.05</mu1><mu2>0.05</mu2><kp>1000000.0</kp><kd>10.0</kd><minDepth>0.001</minDepth><maxVel>1.0</maxVel>
+  </gazebo>
+  <gazebo reference="right_caster_link">
+    <mu1>0.05</mu1><mu2>0.05</mu2><kp>1000000.0</kp><kd>10.0</kd><minDepth>0.001</minDepth><maxVel>1.0</maxVel>
+  </gazebo>
+
+  <!-- ===================== LIDAR (same as mybot.urdf.xacro, frame laser_link) ===================== -->
+  <gazebo reference="laser_link">
+    <sensor name="lidar_sensor" type="ray">
+      <always_on>true</always_on>
+      <visualize>true</visualize>
+      <update_rate>30</update_rate>
+      <ray>
+        <scan>
+          <horizontal>
+            <samples>180</samples>
+            <resolution>1</resolution>
+            <!-- 90 deg to 270 deg. 0 is +X, toward the forks. -->
+            <min_angle>1.5708</min_angle>
+            <max_angle>4.7124</max_angle>
+          </horizontal>
+        </scan>
+        <range>
+          <min>0.12</min>
+          <max>10.0</max>
+          <resolution>0.01</resolution>
+        </range>
+        <noise>
+          <type>gaussian</type>
+          <mean>0.0</mean>
+          <stddev>0.01</stddev>
+        </noise>
+      </ray>
+      <plugin name="laser_plugin" filename="libgazebo_ros_ray_sensor.so">
+        <ros>
+          <remapping>~/out:=/scan</remapping>
+        </ros>
+        <frame_name>laser_link</frame_name>
+        <output_type>sensor_msgs/LaserScan</output_type>
+      </plugin>
+    </sensor>
+  </gazebo>
+
+  <!-- ===================== IMU (same as mybot.urdf.xacro, frame imu_link) ===================== -->
+  <gazebo reference="imu_link">
+    <sensor name="imu_sensor" type="imu">
+      <always_on>true</always_on>
+      <update_rate>100</update_rate>
+      <visualize>false</visualize>
+      <imu>
+        <angular_velocity>
+          <x><noise type="gaussian"><mean>0.0</mean><stddev>0.0002</stddev></noise></x>
+          <y><noise type="gaussian"><mean>0.0</mean><stddev>0.0002</stddev></noise></y>
+          <z><noise type="gaussian"><mean>0.0</mean><stddev>0.0002</stddev></noise></z>
+        </angular_velocity>
+        <linear_acceleration>
+          <x><noise type="gaussian"><mean>0.0</mean><stddev>0.017</stddev></noise></x>
+          <y><noise type="gaussian"><mean>0.0</mean><stddev>0.017</stddev></noise></y>
+          <z><noise type="gaussian"><mean>0.0</mean><stddev>0.017</stddev></noise></z>
+        </linear_acceleration>
+      </imu>
+      <plugin name="imu_plugin" filename="libgazebo_ros_imu_sensor.so">
+        <ros>
+          <namespace>/</namespace>
+          <remapping>~/out:=imu</remapping>
+        </ros>
+        <frame_name>imu_link</frame_name>
+        <initial_orientation_as_reference>false</initial_orientation_as_reference>
+      </plugin>
+    </sensor>
+  </gazebo>
+
+</robot>

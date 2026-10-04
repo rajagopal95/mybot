@@ -1,7 +1,27 @@
 #!/bin/bash
 
+# Optional label only. Cleanup always stops both robots, because Gazebo,
+# ros2 launch, and the controllers are shared. No prompt here: mapping.sh
+# and start.sh call this script before their own robot menu.
+#   ./kill.sh
+#   ./kill.sh mybot
+#   ./kill.sh forklift
+case "${1:-}" in
+    ""|mybot|1|forklift|fork|2) ;;
+    -h|--help)
+        echo "Usage: $0 [mybot|forklift]"
+        echo "Stops Mybot and Forklift processes either way."
+        exit 0
+        ;;
+    *)
+        echo "Unknown robot: $1"
+        echo "Usage: $0 [mybot|forklift]"
+        exit 1
+        ;;
+esac
+
 echo "========================================="
-echo "      MyBot Cleanup Utility"
+echo "      MyBot / Forklift Cleanup"
 echo "========================================="
 
 echo "[1/6] Stopping ROS 2 launch processes..."
