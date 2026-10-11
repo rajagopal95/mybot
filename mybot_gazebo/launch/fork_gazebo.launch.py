@@ -11,7 +11,7 @@ from launch.actions import (
     TimerAction,
 )
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import Command, LaunchConfiguration
+from launch.substitutions import Command, LaunchConfiguration, PathJoinSubstitution
 
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
@@ -33,25 +33,52 @@ def generate_launch_description():
     model_path = ":".join([
         "/usr/share/gazebo-11/models",
         os.path.dirname(pkg_description),
+        # aws_robomaker_warehouse_* models used by the warehouse worlds
+        os.path.join(pkg_gazebo, "models"),
     ])
 
-    world_file = os.path.join(
+    # world_name: any file in mybot_gazebo/worlds (hospital.world, small_warehouse.world, ...)
+    # Some warehouse model files reference meshes as "models/<name>/meshes/..." (no model://).
+    # Gazebo finds those only if the folder CONTAINING "models" is on GAZEBO_RESOURCE_PATH.
+    resource_path = ":".join([
+        p for p in [
+            os.environ.get("GAZEBO_RESOURCE_PATH", "/usr/share/gazebo-11"),
+            pkg_gazebo,
+        ] if p
+    ])
+
+    world_file = PathJoinSubstitution([
         pkg_gazebo,
         "worlds",
-        "hospital.world",
-    )
+        LaunchConfiguration("world_name"),
+    ])
 
-    xacro_file = os.path.join(
+    # xacro_name: any file in mybot_description/urdf
+    xacro_file = PathJoinSubstitution([
         pkg_description,
         "urdf",
-        "fork_redesigned_urdf.xacro",
-    )
+        LaunchConfiguration("xacro_name"),
+    ])
 
     controllers_file = os.path.join(
         pkg_gazebo,
         "config",
         "fork_controllers.yaml",
     )
+
+    declare_world = DeclareLaunchArgument(
+        "world_name",
+        default_value="no_roof_small_warehouse.world",
+        description="World file in mybot_gazebo/worlds.",
+    )
+    declare_xacro = DeclareLaunchArgument(
+        "xacro_name",
+        default_value="fork_redesigned_urdf.xacro",
+        description="Robot xacro in mybot_description/urdf.",
+    )
+    declare_x = DeclareLaunchArgument("x_pose", default_value="0.0")
+    declare_y = DeclareLaunchArgument("y_pose", default_value="0.0")
+    declare_yaw = DeclareLaunchArgument("yaw_pose", default_value="0.0")
 
     declare_use_camera = DeclareLaunchArgument(
         "use_camera",
@@ -115,8 +142,14 @@ def generate_launch_description():
             "fork_robot",
             "-topic",
             "robot_description",
+            "-x",
+            LaunchConfiguration("x_pose"),
+            "-y",
+            LaunchConfiguration("y_pose"),
             "-z",
             "0.05",
+            "-Y",
+            LaunchConfiguration("yaw_pose"),
         ],
     )
 
@@ -173,8 +206,14 @@ def generate_launch_description():
 
     return LaunchDescription([
         SetEnvironmentVariable("GAZEBO_MODEL_PATH", model_path),
+        SetEnvironmentVariable("GAZEBO_RESOURCE_PATH", resource_path),
         SetEnvironmentVariable("GAZEBO_MODEL_DATABASE_URI", ""),
         LogInfo(msg="GAZEBO_MODEL_PATH=" + model_path),
+        declare_world,
+        declare_xacro,
+        declare_x,
+        declare_y,
+        declare_yaw,
         declare_use_camera,
         gazebo,
         robot_state_publisher,

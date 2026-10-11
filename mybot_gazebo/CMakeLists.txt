@@ -23,6 +23,6 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 endif()
 
-install(DIRECTORY launch worlds config DESTINATION share/${PROJECT_NAME})
+install(DIRECTORY launch worlds config models DESTINATION share/${PROJECT_NAME})
 
 ament_package()
