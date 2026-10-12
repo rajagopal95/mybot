@@ -75,9 +75,9 @@
       </collision>
       <inertial>
         <mass value="0.5"/>
-        <inertia ixx="0.00052" ixy="0" ixz="0"
-                 iyy="0.00063" iyz="0"
-                 izz="0.00052"/>
+        <inertia ixx="0.000867" ixy="0" ixz="0"
+                 iyy="0.00016" iyz="0"
+                 izz="0.000867"/>
       </inertial>
     </link>
 
@@ -86,8 +86,8 @@
       <child  link="${prefix}_wheel_link"/>
       <origin xyz="0 ${reflect * wheel_separation/2} ${wheel_offset_z}" rpy="0 0 0"/>
       <axis xyz="0 1 0"/>
-      <dynamics damping="0.2" friction="0.1"/>
-      <limit effort="10.0" velocity="10.0"/>
+      <dynamics damping="0.01" friction="0.0"/>
+      <limit effort="2.0" velocity="60.0"/>
     </joint>
   </xacro:macro>
 
@@ -178,7 +178,7 @@
     <material>Gazebo/Black</material>
     <mu1>1.0</mu1>
     <mu2>1.0</mu2>
-    <kp>100000.0</kp>
+    <kp>1000000.0</kp>
     <kd>10.0</kd>
     <minDepth>0.001</minDepth>
     <maxVel>0.1</maxVel>
@@ -188,7 +188,7 @@
     <material>Gazebo/Black</material>
     <mu1>1.0</mu1>
     <mu2>1.0</mu2>
-    <kp>100000.0</kp>
+    <kp>1000000.0</kp>
     <kd>10.0</kd>
     <minDepth>0.001</minDepth>
     <maxVel>0.1</maxVel>
