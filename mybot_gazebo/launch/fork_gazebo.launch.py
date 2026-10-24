@@ -60,11 +60,9 @@ def generate_launch_description():
         LaunchConfiguration("xacro_name"),
     ])
 
-    controllers_file = os.path.join(
-        pkg_gazebo,
-        "config",
-        "fork_controllers.yaml",
-    )
+    # The controllers yaml is loaded by the gazebo_ros2_control plugin declared
+    # in fork_robot.urdf.xacro ($(find mybot_gazebo)/config/fork_controllers.yaml),
+    # so it is not referenced here.
 
     declare_world = DeclareLaunchArgument(
         "world_name",
@@ -73,8 +71,11 @@ def generate_launch_description():
     )
     declare_xacro = DeclareLaunchArgument(
         "xacro_name",
-        default_value="fork_redesigned_urdf.xacro",
-        description="Robot xacro in mybot_description/urdf.",
+        default_value="fork_robot.urdf.xacro",
+        description=(
+            "Robot xacro in mybot_description/urdf. fork_robot.urdf.xacro wraps the "
+            "Fusion export and adds base_footprint and ros2_control."
+        ),
     )
     declare_x = DeclareLaunchArgument("x_pose", default_value="0.0")
     declare_y = DeclareLaunchArgument("y_pose", default_value="0.0")
@@ -86,10 +87,10 @@ def generate_launch_description():
         description="Compatibility argument; fork model has no camera.",
     )
 
-    # Expand fork_redesigned_urdf.xacro.
+    # Expand the xacro selected by xacro_name.
     # Compact the XML to avoid the long ROS parameter override problem.
     robot_description_content = Command([
-        "bash -c \"xacro ",
+        "bash -c \"set -o pipefail; xacro ",
         xacro_file,
         " use_camera:=",
         use_camera,
@@ -154,7 +155,8 @@ def generate_launch_description():
     )
 
     # gazebo_ros2_control creates /controller_manager from the Xacro plugin.
-    # Start the controllers after Gazebo + ros2_control are ready.
+    # Start the controllers after Gazebo + ros2_control are ready. If the
+    # spawners report "controller_manager not available", raise these periods.
     spawn_joint_state_broadcaster = TimerAction(
         period=8.0,
         actions=[
@@ -164,6 +166,40 @@ def generate_launch_description():
                 name="fork_joint_state_broadcaster_spawner",
                 arguments=[
                     "joint_state_broadcaster",
+                    "--controller-manager",
+                    "/controller_manager",
+                ],
+                output="screen",
+            )
+        ],
+    )
+
+    spawn_diff_drive = TimerAction(
+        period=10.0,
+        actions=[
+            Node(
+                package="controller_manager",
+                executable="spawner",
+                name="fork_diff_drive_spawner",
+                arguments=[
+                    "diff_drive_controller",
+                    "--controller-manager",
+                    "/controller_manager",
+                ],
+                output="screen",
+            )
+        ],
+    )
+
+    spawn_fork_controller = TimerAction(
+        period=12.0,
+        actions=[
+            Node(
+                package="controller_manager",
+                executable="spawner",
+                name="fork_position_controller_spawner",
+                arguments=[
+                    "fork_position_controller",
                     "--controller-manager",
                     "/controller_manager",
                 ],
@@ -187,23 +223,6 @@ def generate_launch_description():
         ],
     )
 
-    spawn_diff_drive = TimerAction(
-        period=10.0,
-        actions=[
-            Node(
-                package="controller_manager",
-                executable="spawner",
-                name="fork_diff_drive_spawner",
-                arguments=[
-                    "diff_drive_controller",
-                    "--controller-manager",
-                    "/controller_manager",
-                ],
-                output="screen",
-            )
-        ],
-    )
-
     return LaunchDescription([
         SetEnvironmentVariable("GAZEBO_MODEL_PATH", model_path),
         SetEnvironmentVariable("GAZEBO_RESOURCE_PATH", resource_path),
@@ -223,5 +242,6 @@ def generate_launch_description():
         ),
         spawn_joint_state_broadcaster,
         spawn_diff_drive,
+        spawn_fork_controller,
         scan_filter,
     ])
