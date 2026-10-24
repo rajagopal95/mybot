@@ -156,12 +156,18 @@ ros-humble-laser-filters
 
 ---
 
-# 📥 Clone the Repository
+# 📥 Create the Workspace and Clone the Repository
+
+First create the workspace named `mybot_ws`, with a `src` folder inside it, then clone the repo into `src`:
 
 ```bash
-git clone https://github.com/rajagopal95/mybot_ws.git
-cd mybot_ws
+mkdir -p ~/mybot_ws/src
+cd ~/mybot_ws/src
+git clone https://github.com/rajagopal95/mybot_ws.git mybot
+cd ~/mybot_ws
 ```
+
+The `mybot` at the end of the clone command places the repo in `~/mybot_ws/src/mybot`, which matches the project structure above.
 
 ---
 
