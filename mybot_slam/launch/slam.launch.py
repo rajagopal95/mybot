@@ -1,101 +1,63 @@
-import os
-
-from ament_index_python.packages import get_package_share_directory
+#!/usr/bin/env python3
 
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration
-
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
+from launch_ros.substitutions import FindPackageShare
 
 
 def generate_launch_description():
 
-    use_sim_time = LaunchConfiguration("use_sim_time")
+    pkg_slam_share = FindPackageShare("mybot_slam")
 
-    slam_params = os.path.join(
-        get_package_share_directory("mybot_slam"),
-        "config",
-        "mapper_params_online_async.yaml"
-    )
-
-    ekf_config = os.path.join(
-        get_package_share_directory("mybot_slam"),
-        "config",
-        "ekf.yaml"
-    )
-
-    rviz_config = os.path.join(
-        get_package_share_directory("mybot_slam"),
-        "rviz",
-        "slam.rviz"
-    )
-
-    ekf_node = Node(
-        package="robot_localization",
-        executable="ekf_node",
-        name="ekf_filter_node",
-        output="screen",
-        parameters=[
-            ekf_config,
-            {"use_sim_time": use_sim_time}
-        ],
-        remappings=[
-            ("odometry/filtered", "/odom_filtered")
-        ]
-    )
-
-    scan_filter = Node(
+    # Scan filter — drops points inside the robot's own footprint before
+    # they reach slam_toolbox
+    scan_filter_node = Node(
         package="laser_filters",
         executable="scan_to_scan_filter_chain",
         name="scan_filter_node",
         output="screen",
         parameters=[
-            os.path.join(get_package_share_directory("mybot_slam"), "config", "scan_filter.yaml"),
-            {"use_sim_time": use_sim_time}
+            PathJoinSubstitution([pkg_slam_share, "config", "scan_filter.yaml"]),
+            {"use_sim_time": True},
         ],
         remappings=[
-            ("scan", "scan_raw"),
-            ("scan_filtered", "scan"),
-        ]
+            ("scan", "/scan"),
+            ("scan_filtered", "/scan_filtered"),
+        ],
     )
 
-    slam_toolbox = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(
-                get_package_share_directory("slam_toolbox"),
-                "launch",
-                "online_async_launch.py"
-            )
-        ),
-        launch_arguments={
-            "use_sim_time": use_sim_time,
-            "slam_params_file": slam_params,
-        }.items()
-    )
-
+    # RViz. mapping.sh passes use_rviz:=false for the forklift and opens
+    # rviz/fork_mapping.rviz itself.
+    use_rviz = LaunchConfiguration("use_rviz")
     rviz = Node(
         package="rviz2",
         executable="rviz2",
         name="rviz2",
-        arguments=["-d", rviz_config],
-        parameters=[
-            {"use_sim_time": use_sim_time}
-        ],
         output="screen",
+        condition=IfCondition(use_rviz),
+        arguments=["-d", PathJoinSubstitution([pkg_slam_share, "rviz", "slam.rviz"])],
+        parameters=[{"use_sim_time": True}],
+    )
+
+    # SLAM Toolbox — lifecycle-managed, via online_async_launch.py.
+    # slam_params.yaml already has scan_topic set to /scan_filtered.
+    slam = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            PathJoinSubstitution([pkg_slam_share, "launch", "online_async_launch.py"])
+        ),
+        launch_arguments={
+            "use_sim_time": "true",
+            "autostart": "true",
+        }.items(),
     )
 
     return LaunchDescription([
-
-        DeclareLaunchArgument(
-            "use_sim_time",
-            default_value="true"
-        ),
-
-        ekf_node,
-        scan_filter,
-        slam_toolbox,
+        DeclareLaunchArgument("use_rviz", default_value="true"),
+        scan_filter_node,
         rviz,
-
+        slam,
     ])

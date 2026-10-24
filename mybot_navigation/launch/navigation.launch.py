@@ -30,10 +30,18 @@ def generate_launch_description():
         parameters=[
             ekf_config,
             {"use_sim_time": use_sim_time}
-        ],
-        remappings=[
-            ("odometry/filtered", "/odom")
+
         ]
+    )
+
+    scan_filter_node = Node(
+        package="laser_filters",
+        executable="scan_to_scan_filter_chain",
+        name="scan_filter_node",
+        output="screen",
+        parameters=[os.path.join(slam_dir, 'config', 'scan_filter.yaml'),
+                    {"use_sim_time": True}],
+        remappings=[("scan", "/scan"), ("scan_filtered", "/scan_filtered")],
     )
 
     nav2_bringup_launch = IncludeLaunchDescription(
@@ -61,5 +69,6 @@ def generate_launch_description():
         DeclareLaunchArgument('use_sim_time', default_value='true'),
         ekf_node,
         nav2_bringup_launch,
+        scan_filter_node,
         rviz_node
     ])

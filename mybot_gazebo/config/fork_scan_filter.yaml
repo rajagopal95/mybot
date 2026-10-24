@@ -1,0 +1,12 @@
+# Keeps 90 deg to 270 deg of /scan. laser_link +X points at the forks;
+# this window faces the front panel.
+scan_filter_node:
+  ros__parameters:
+    use_sim_time: true
+
+    filter1:
+      name: scan_90_to_270
+      type: laser_filters/LaserScanAngularBoundsFilter
+      params:
+        lower_angle: 1.5708
+        upper_angle: 4.7124

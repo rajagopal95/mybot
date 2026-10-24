@@ -25,5 +25,27 @@ slam_toolbox:
     tf_buffer_duration: 30.0
     stack_size_to_use: 40000000
 
-    minimum_travel_distance: 0.1
-    minimum_travel_heading: 0.1
+    minimum_travel_distance: 0.05
+    minimum_travel_heading: 0.05
+
+    # --- scan matching tuning: raw wheel odom (no EKF) drifts more between
+    # scans, so widen the search window the matcher checks around the
+    # odom-predicted pose, and require a stronger match before accepting it.
+    use_scan_matching: true
+    use_scan_barycenter: true
+    scan_buffer_size: 10
+    scan_buffer_maximum_scan_distance: 10.0
+
+    correlation_search_space_dimension: 0.5
+    correlation_search_space_resolution: 0.01
+    correlation_search_space_smear_deviation: 0.1
+
+    link_match_minimum_response_fine: 0.1
+    link_scan_maximum_distance: 1.5
+
+    loop_search_maximum_distance: 3.0
+    do_loop_closing: true
+    loop_match_minimum_chain_size: 10
+    loop_match_maximum_variance_coarse: 3.0
+    loop_match_minimum_response_coarse: 0.35
+    loop_match_minimum_response_fine: 0.45

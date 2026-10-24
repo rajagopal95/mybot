@@ -19,7 +19,7 @@ import os
 import subprocess
 import sys
 
-MAPS_DIR = "/home/raja/mybot_ws/src/mybot_slam/maps"
+MAPS_DIR = "/home/raja/mybot_ws/src/mybot/mybot_slam/maps"
 
 
 def get_map_name() -> str:
