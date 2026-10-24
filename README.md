@@ -163,7 +163,7 @@ First create the workspace named `mybot_ws`, with a `src` folder inside it, then
 ```bash
 mkdir -p ~/mybot_ws/src
 cd ~/mybot_ws/src
-git clone https://github.com/rajagopal95/mybot_ws.git 
+git clone https://github.com/rajagopal95/mybot.git 
 cd ~/mybot_ws
 ```
 
