@@ -13,25 +13,7 @@ def generate_launch_description():
 
     pkg_slam_share = FindPackageShare("mybot_slam")
 
-    # Scan filter — drops points inside the robot's own footprint before
-    # they reach slam_toolbox
-    scan_filter_node = Node(
-        package="laser_filters",
-        executable="scan_to_scan_filter_chain",
-        name="scan_filter_node",
-        output="screen",
-        parameters=[
-            PathJoinSubstitution([pkg_slam_share, "config", "scan_filter.yaml"]),
-            {"use_sim_time": True},
-        ],
-        remappings=[
-            ("scan", "/scan"),
-            ("scan_filtered", "/scan_filtered"),
-        ],
-    )
 
-    # RViz. mapping.sh passes use_rviz:=false for the forklift and opens
-    # rviz/fork_mapping.rviz itself.
     use_rviz = LaunchConfiguration("use_rviz")
     rviz = Node(
         package="rviz2",
@@ -57,7 +39,6 @@ def generate_launch_description():
 
     return LaunchDescription([
         DeclareLaunchArgument("use_rviz", default_value="true"),
-        scan_filter_node,
         rviz,
         slam,
     ])

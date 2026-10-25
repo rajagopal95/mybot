@@ -12,6 +12,9 @@
   <depend>gazebo_ros</depend>
   <depend>gazebo_plugins</depend>
   <depend>robot_state_publisher</depend>
+  <depend>rclcpp</depend>
+  <depend>geometry_msgs</depend>
+  <depend>sensor_msgs</depend>
   <depend>ros2_control</depend>
   <depend>ros2_controllers</depend>
   <depend>gazebo_ros2_control</depend>
