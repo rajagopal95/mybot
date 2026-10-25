@@ -1,6 +1,6 @@
 # 🤖 MyBot — ROS2 SLAM Comparative Study & Navigation Stack
 
-A ROS2 workspace for autonomous mobile robot (AMR) simulation, mapping, localization, and navigation — built around a **comparative SLAM study** (SLAM Toolbox vs Cartographer) with a full Nav2 navigation pipeline. It also includes a **forklift AMR** model with its own Gazebo launch file and warehouse worlds.
+A ROS2 workspace for autonomous mobile robot (AMR) simulation, mapping, localization, and navigation — built around a **comparative SLAM study** (SLAM Toolbox vs Cartographer) with a full Nav2 navigation pipeline. It also includes a **forklift AMR** model with its own Gazebo launch file, warehouse worlds, and a Nav2 parameter set tuned for its long, narrow footprint.
 
 The workspace is developed and tested using **ROS2 Humble on Ubuntu 22.04**.
 
@@ -16,6 +16,7 @@ The workspace contains:
 - Gazebo simulation worlds (hospital, room, warehouse) and AWS warehouse models
 - Two SLAM backends (SLAM Toolbox, Cartographer)
 - Nav2-based navigation with EKF-fused odometry
+- Footprint-aware planning (Smac Hybrid-A*) and MPPI control for the forklift
 - Interactive map-saving script
 - Shell scripts for one-command mapping, navigation, verification, and cleanup (`mapping.sh` and `start.sh` support both `mybot` and `forklift`)
 
@@ -25,7 +26,10 @@ The workspace contains:
 
 - 🤖 Autonomous Mobile Robot (AMR) simulation, including a forklift model
 - 🗺️ Multiple SLAM algorithms — SLAM Toolbox, Cartographer
-- 🚀 ROS2 Nav2 navigation stack
+- 🚀 ROS2 Nav2 navigation stack (Smac Hybrid-A* + MPPI, with ThetaStar / NavFn / DWB fallbacks)
+- 🚜 Polygonal forklift footprint with reverse-capable planning for tight aisles
+- 📡 Ultrasonic range layer in the local costmap for obstacles below the lidar plane
+- 🚧 Optional keepout zones to block specific narrow gaps
 - 📍 Localization with initial pose estimation
 - 🌍 Gazebo simulation with selectable worlds (hospital, room, small warehouse)
 - 📊 RViz visualization
@@ -46,6 +50,8 @@ The workspace contains:
 | Programming | Python |
 | SLAM | slam_toolbox, Cartographer |
 | Navigation | ROS2 Navigation Stack (Nav2) |
+| Global planner | Smac Hybrid-A* (primary), Theta*, NavFn |
+| Local controller | MPPI (primary), DWB (fallback) |
 | Sensor Fusion | robot_localization (EKF) |
 | Visualization | RViz2 |
 | Simulation | Gazebo Classic |
@@ -137,6 +143,8 @@ ros-humble-cartographer \
 ros-humble-cartographer-ros \
 ros-humble-navigation2 \
 ros-humble-nav2-bringup \
+ros-humble-nav2-smac-planner \
+ros-humble-nav2-mppi-controller \
 ros-humble-robot-localization \
 ros-humble-teleop-twist-keyboard \
 ros-humble-rviz2
@@ -374,6 +382,111 @@ ros2 run teleop_twist_keyboard teleop_twist_keyboard
 
 ---
 
+# 🧭 Forklift Nav2 Tuning
+
+The forklift uses its own parameter set in `mybot_navigation/config/nav2_params.yaml`, tuned for warehouse aisles of 0.9 m to 1.2 m.
+
+| Item | Setting |
+|---|---|
+| Footprint | Polygon matching the chassis and tapered forks: about 0.76 m wide, 0.97 m long (x from +0.05 to −0.92 m from `base_footprint`) |
+| Footprint padding | `0.01` m per side in both costmaps |
+| Global planner | `GridBased` = `SmacPlannerHybrid`, Reeds-Shepp motion model (can reverse), footprint-aware. `ThetaStar` and `NavFn` remain as fallbacks |
+| Local controller | `FollowPath` = MPPI (DiffDrive model). `DWB` is the fallback |
+| Velocity limits | Forward 0.35 m/s, reverse 0.20 m/s, rotation 0.60 rad/s |
+| Local costmap | 4 m x 4 m rolling window, 0.05 m resolution, voxel layer + ultrasonic range layer + inflation |
+| Global costmap | Static + obstacle + inflation layers (ultrasonics are local-only) |
+| Odometry | `/odometry/filtered` everywhere (EKF-fused) |
+| Scan topic | `/scan_filtered` for AMCL, costmaps |
+
+## Inflation and footprint checking
+
+MPPI and Smac use the full polygon footprint, not a circle. For this to run efficiently, the inflation radius must be at least half the footprint's largest dimension. With a 0.97 m long footprint, use an `inflation_radius` of about 0.55 m. Keep these values identical in three places:
+
+- `local_costmap` → `inflation_layer`
+- `global_costmap` → `inflation_layer`
+- MPPI `ObstaclesCritic` (`inflation_radius` and `cost_scaling_factor`)
+
+If the controller logs "Inflation layer either not found or inflation is not set sufficiently for optimized non-circular collision checking", the radius is too small. Collision checking then falls back to a much slower path and the controller misses its 20 Hz rate.
+
+## Narrow gaps and keepout zones
+
+The planner only treats a gap as blocked if the footprint would touch inscribed or lethal cells. A gap wider than the footprint plus padding (for example 0.87 m against a 0.78 m padded footprint) is therefore planned through, whatever the inflation cost. Two ways to prevent that:
+
+1. **Keepout zone (recommended for a specific gap).** Paint the gap black on a copy of the map image, save it as a mask yaml, and enable the Nav2 keepout filter. Other aisles keep working.
+
+   ```yaml
+   local_costmap:
+     local_costmap:
+       ros__parameters:
+         filters: ["keepout_filter"]
+         keepout_filter:
+           plugin: "nav2_costmap_2d::KeepoutFilter"
+           enabled: True
+           filter_info_topic: "/costmap_filter_info"
+   # repeat for global_costmap, then run a filter mask server
+   # (nav2_map_server) and costmap_filter_info_server, and add both
+   # to a lifecycle manager with autostart: true
+   ```
+
+2. **Larger footprint padding.** Raising `footprint_padding` makes every gap narrower than the padded width unusable. At the default 0.01 m, padding of about 0.10 m is needed to block a 0.87 m gap, and that would also block real 0.9 m aisles.
+
+Leave a margin of about 0.3 m around the gap entrance in the keepout mask so the robot stops before its nose reaches the inflation zone.
+
+---
+
+# 🩺 Troubleshooting Navigation
+
+## Robot sits still and the goal keeps being re-sent
+
+Typical controller log:
+
+```text
+[WARN]  Control loop missed its desired rate of 20.0000Hz   (repeated)
+[ERROR] Failed to make progress
+[WARN]  [follow_path] [ActionServer] Aborting handle.
+```
+
+- **"Control loop missed its desired rate"**: MPPI is too slow. Check the inflation radius (see above), then reduce `batch_size` or `time_steps`, and check CPU use with `top`, since Gazebo and Nav2 compete for CPU.
+- **"Failed to make progress"** comes from `progress_checker`. With `movement_time_allowance: 15.0` it fires every 15 s while the robot is not moving. It is a symptom of the stall, not the cause.
+- **Check the velocity command** while a goal is active:
+
+  ```bash
+  ros2 topic echo /cmd_vel --once
+  ros2 topic echo /cmd_vel_nav --once   # if the velocity smoother remaps it
+  ```
+
+  All zeros means the controller outputs nothing. Non-zero values mean the command is not reaching the robot (remap or velocity smoother issue).
+- **Swap in DWB**: name the DWB plugin `FollowPath` and send the same goal. If DWB moves the robot, the problem is MPPI load.
+
+## Robot is too close to a wall to turn or move
+
+The forklift's footprint reaches 0.92 m behind `base_footprint`, so a spin in place sweeps a circle of about 0.93 m radius and the Spin recovery aborts near walls. Back the robot out first:
+
+```bash
+ros2 run teleop_twist_keyboard teleop_twist_keyboard
+# or
+ros2 topic pub -r 10 /cmd_vel geometry_msgs/msg/Twist "{linear: {x: -0.1}}"
+```
+
+Then clear stale cells:
+
+```bash
+ros2 service call /local_costmap/clear_entirely_local_costmap nav2_msgs/srv/ClearEntireCostmap {}
+ros2 service call /global_costmap/clear_entirely_global_costmap nav2_msgs/srv/ClearEntireCostmap {}
+```
+
+For a long robot, consider a custom behavior tree (set via `default_nav_to_pose_bt_xml`) that runs `BackUp` before `Spin` in recovery.
+
+## Useful log lines
+
+| Message | Meaning |
+|---|---|
+| `Starting point in lethal space` | Planner rejected the start pose; back out and clear costmaps |
+| `Optimizer fail to compute path` | MPPI found no collision-free trajectory |
+| `Collision Ahead` | Spin or BackUp aborted because the swept footprint hits a cost cell |
+
+---
+
 # 🧠 Complete Workflow
 
 ```text
@@ -449,7 +562,7 @@ While `start.sh` is running, RViz opens automatically with the navigation config
 mybot_navigation/rviz/nav2.rviz
 ```
 
-Set the Fixed Frame to `map` and confirm `Map`, `Costmap`, `Path`, `LaserScan`, and `TF` displays are active.
+Set the Fixed Frame to `map` and confirm `Map`, `Costmap`, `Path`, `LaserScan`, and `TF` displays are active. The config also shows the local and global costmaps and the footprint polygon (`/global_costmap/published_footprint`), which is the quickest way to see whether the robot fits a gap.
 
 ---
 
@@ -468,9 +581,17 @@ Important interfaces include:
 /scan_filtered      (forklift launch, from the laser filter chain)
 ```
 
+### Ultrasonic range sensors (forklift, local costmap)
+```text
+/ultrasonic_front_left   /ultrasonic_front_right
+/ultrasonic_rear_left    /ultrasonic_rear_right
+/ultrasonic_side_left    /ultrasonic_side_right
+```
+
 ### Odometry / TF
 ```text
 /odom
+/odometry/filtered  (EKF output, used by Nav2)
 odom → base_link (EKF-fused)
 ```
 
@@ -518,7 +639,7 @@ mybot_slam/maps/
 └── hospital.yaml / .pgm
 ```
 
-New maps are saved here by `save_map.py` (for example `warehouse.yaml` / `.pgm` after mapping the warehouse world).
+New maps are saved here by `save_map.py` (for example `warehouse.yaml` / `.pgm` after mapping the warehouse world). A keepout mask, if used, is a separate image and yaml saved alongside the map.
 
 Logs:
 
@@ -566,7 +687,8 @@ The system is designed to demonstrate:
 
 - ✅ Comparative SLAM study across two backends
 - ✅ Real-time LiDAR mapping
-- ✅ Multi-planner Nav2 navigation (SmacPlanner2D, ThetaStar, NavFn)
+- ✅ Multi-planner Nav2 navigation (Smac Hybrid-A*, ThetaStar, NavFn) with MPPI and DWB controllers
+- ✅ Footprint-aware planning for the forklift, including reversing out of tight spots
 - ✅ EKF-based sensor fusion
 - ✅ Saved occupancy-grid maps
 - ✅ One-command mapping/navigation/cleanup workflow
@@ -591,6 +713,8 @@ docs/
 
 - Dynamic obstacle avoidance
 - Per-goal planner auto-selection
+- Keepout-zone masks generated per world
+- Custom recovery behavior tree (BackUp before Spin) for the forklift
 - Isaac ROS perception integration
 - YOLOv8-based object detection node
 - Improved TF tree stability across SLAM backends
