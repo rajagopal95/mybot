@@ -104,15 +104,29 @@ done
 RUN_DIR="$BASE_LOG_DIR/log$i"
 mkdir -p "$RUN_DIR"
 
+# Keep the existing combined launcher logs below, and also give ROS 2 a
+# run-specific log directory.  This preserves one file per node (including
+# Gazebo plugins, Nav2 servers, RViz, and controllers) instead of mixing every
+# node's diagnostics only into gazebo.log or navigation.log.
+ROS_RUN_LOG_DIR="$RUN_DIR/ros"
+mkdir -p "$ROS_RUN_LOG_DIR"
+GAZEBO_NODE_LOG_DIR="$RUN_DIR/gazebo"
+NAVIGATION_NODE_LOG_DIR="$RUN_DIR/navigation"
+mkdir -p "$GAZEBO_NODE_LOG_DIR" "$NAVIGATION_NODE_LOG_DIR"
+
 # ---------- 6. Launch ----------
 echo "Starting Gazebo ($ROBOT)..."
-$GAZEBO_LAUNCH > "$RUN_DIR/gazebo.log" 2>&1 &
+ROS_LOG_DIR="$ROS_RUN_LOG_DIR" $GAZEBO_LAUNCH \
+    > >(tee "$RUN_DIR/gazebo.log" | python3 "$SCRIPT_DIR/split_node_logs.py" "$GAZEBO_NODE_LOG_DIR") \
+    2>&1 &
 GAZEBO_PID=$!
 
 sleep 10
 
 echo "Starting Navigation..."
-ros2 launch mybot_navigation navigation.launch.py $NAV_ARGS > "$RUN_DIR/navigation.log" 2>&1 &
+ROS_LOG_DIR="$ROS_RUN_LOG_DIR" ros2 launch mybot_navigation navigation.launch.py $NAV_ARGS \
+    > >(tee "$RUN_DIR/navigation.log" | python3 "$SCRIPT_DIR/split_node_logs.py" "$NAVIGATION_NODE_LOG_DIR") \
+    2>&1 &
 NAV_PID=$!
 
 echo
@@ -123,4 +137,7 @@ echo "Map             : ${MAP_FILE:-default (from launch file)}"
 echo "Gazebo PID      : $GAZEBO_PID"
 echo "Navigation PID  : $NAV_PID"
 echo "Logs saved in   : $RUN_DIR"
+echo "Node logs       : $ROS_RUN_LOG_DIR"
+echo "Gazebo nodes    : $GAZEBO_NODE_LOG_DIR"
+echo "Nav2 nodes      : $NAVIGATION_NODE_LOG_DIR"
 echo "========================================="

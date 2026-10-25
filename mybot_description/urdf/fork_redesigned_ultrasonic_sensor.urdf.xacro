@@ -197,7 +197,7 @@
 
 <link name="fork_coupling_link_1">
   <inertial>
-    <origin xyz="3.7046213172131637e-07 -1.8261108658546021e-07 -0.003490428234806414" rpy="0 0 0"/>
+    <origin xyz="3.704621314715162e-07 -1.82611086141371e-07 -0.003490428234806414" rpy="0 0 0"/>
     <mass value="0.012051917875242903"/>
     <inertia ixx="0.0" iyy="0.0" izz="1e-06" ixy="0.0" iyz="0.0" ixz="0.0"/>
   </inertial>
@@ -218,7 +218,7 @@
 
 <link name="fork_holder_link_1">
   <inertial>
-    <origin xyz="0.0599543080891011 -0.6339925062179095 -2.0153384795268146" rpy="0 0 0"/>
+    <origin xyz="0.05995430808910074 -0.6339925062179093 -2.015338479526815" rpy="0 0 0"/>
     <mass value="0.06369340089197861"/>
     <inertia ixx="1.3e-05" iyy="1e-05" izz="1.3e-05" ixy="0.0" iyz="4e-06" ixz="-0.0"/>
   </inertial>
@@ -239,7 +239,7 @@
 
 <link name="fork_center_slot_1">
   <inertial>
-    <origin xyz="3.0808905815415955e-07 0.020000494981945116 -0.011400000000148514" rpy="0 0 0"/>
+    <origin xyz="3.080890577378259e-07 0.02000049498194556 -0.01140000000014843" rpy="0 0 0"/>
     <mass value="0.3946719507313423"/>
     <inertia ixx="0.000117" iyy="0.002456" izz="0.002456" ixy="0.0" iyz="-0.0" ixz="0.0"/>
   </inertial>
@@ -260,7 +260,7 @@
 
 <link name="fork_left_link_1">
   <inertial>
-    <origin xyz="-0.016999691910923792 0.250000494981939 0.02000000000000719" rpy="0 0 0"/>
+    <origin xyz="-0.01699969191092429 0.25000049498193877 0.020000000000006565" rpy="0 0 0"/>
     <mass value="0.7308739828358146"/>
     <inertia ixx="0.015334" iyy="0.000216" izz="0.015334" ixy="-0.0" iyz="0.0" ixz="0.0"/>
   </inertial>
@@ -281,7 +281,7 @@
 
 <link name="fork_right_link_1">
   <inertial>
-    <origin xyz="0.02000030808907588 0.25000049498194854 0.017000000000006458" rpy="0 0 0"/>
+    <origin xyz="0.02000030808907538 0.250000494981947 0.017000000000006104" rpy="0 0 0"/>
     <mass value="0.730873982835814"/>
     <inertia ixx="0.015334" iyy="0.000216" izz="0.015334" ixy="-0.0" iyz="-0.0" ixz="0.0"/>
   </inertial>
@@ -344,7 +344,7 @@
 
 <link name="fork_left_h_slot_1">
   <inertial>
-    <origin xyz="-0.01699969191109159 0.020000494981942785 -0.0749999999999964" rpy="0 0 0"/>
+    <origin xyz="-0.01699969191109199 0.02000049498194334 -0.07499999999999676" rpy="0 0 0"/>
     <mass value="0.21926219485074544"/>
     <inertia ixx="0.000444" iyy="0.000444" izz="6.5e-05" ixy="0.0" iyz="-0.0" ixz="0.0"/>
   </inertial>
@@ -365,9 +365,9 @@
 
 <link name="fork_right_h_slot_1">
   <inertial>
-    <origin xyz="0.017000308089211158 0.020000494981948114 -0.07499999999999694" rpy="0 0 0"/>
+    <origin xyz="0.017000308089210492 0.02000049498194878 -0.07499999999999708" rpy="0 0 0"/>
     <mass value="0.21926219485074516"/>
-    <inertia ixx="0.000444" iyy="0.000444" izz="6.5e-05" ixy="0.0" iyz="-0.0" ixz="-0.0"/>
+    <inertia ixx="0.000444" iyy="0.000444" izz="6.5e-05" ixy="-0.0" iyz="0.0" ixz="-0.0"/>
   </inertial>
   <visual>
     <origin xyz="0.344955 -0.859621 -0.16565" rpy="0 0 0"/>
@@ -804,6 +804,132 @@
   </collision>
 </link>
 
+<link name="ultrasonic_front_left_1">
+  <inertial>
+    <origin xyz="0.4369542234814906 -0.450874632737084 -0.8037789689737815" rpy="0 0 0"/>
+    <mass value="0.0294413230658598"/>
+    <inertia ixx="1e-06" iyy="6e-06" izz="5e-06" ixy="0.0" iyz="0.0" ixz="0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="0.415909 -0.893762 -0.8615" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/ultrasonic_front_left_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="0.415909 -0.893762 -0.8615" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/ultrasonic_front_left_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="ultrasonic_front_right_1">
+  <inertial>
+    <origin xyz="0.5469542234814928 -0.450874632737084 -0.8037789689737698" rpy="0 0 0"/>
+    <mass value="0.0294413230658598"/>
+    <inertia ixx="1e-06" iyy="6e-06" izz="5e-06" ixy="0.0" iyz="0.0" ixz="0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="0.993909 -0.893762 -0.8615" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/ultrasonic_front_right_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="0.993909 -0.893762 -0.8615" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/ultrasonic_front_right_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="ultrasonic_side_right_1">
+  <inertial>
+    <origin xyz="-0.5119481193353107 -0.4548811205644019 -0.4697789689737702" rpy="0 0 0"/>
+    <mass value="0.0294413230658598"/>
+    <inertia ixx="6e-06" iyy="1e-06" izz="5e-06" ixy="-0.0" iyz="-0.0" ixz="0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="-0.005 -1.060262 -0.5275" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/ultrasonic_side_right_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="-0.005 -1.060262 -0.5275" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/ultrasonic_side_right_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="ultrasonic_side_left_1">
+  <inertial>
+    <origin xyz="-0.07905226434582698 -0.458881289920285 -0.4857789689737842" rpy="0 0 0"/>
+    <mass value="0.0294413230658598"/>
+    <inertia ixx="6e-06" iyy="1e-06" izz="5e-06" ixy="-0.0" iyz="0.0" ixz="-0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="-0.171091 -1.065762 -0.5435" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/ultrasonic_side_left_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="-0.171091 -1.065762 -0.5435" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/ultrasonic_side_left_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="ultrasonic_rear_right_1">
+  <inertial>
+    <origin xyz="0.5272043928373756 0.7719934274947409 -0.7387789689737696" rpy="0 0 0"/>
+    <mass value="0.0294413230658598"/>
+    <inertia ixx="1e-06" iyy="6e-06" izz="5e-06" ixy="0.0" iyz="-0.0" ixz="-0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="0.994409 -0.0 -0.8455" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/ultrasonic_rear_right_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="0.994409 -0.0 -0.8455" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/ultrasonic_rear_right_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="ultrasonic_rear_left_1">
+  <inertial>
+    <origin xyz="0.46720439283737447 0.7719934274947414 -0.7387789689737826" rpy="0 0 0"/>
+    <mass value="0.0294413230658598"/>
+    <inertia ixx="1e-06" iyy="6e-06" izz="5e-06" ixy="0.0" iyz="-0.0" ixz="-0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="0.416409 -0.0 -0.8455" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/ultrasonic_rear_left_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="0.416409 -0.0 -0.8455" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/ultrasonic_rear_left_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
 <joint name="Rigid_15" type="fixed">
   <origin xyz="0.0345 0.015 -0.034" rpy="0 0 0"/>
   <parent link="left_motor_holder_link_1"/>
@@ -1028,6 +1154,42 @@
   <origin xyz="-0.312045 -0.357234 -0.045" rpy="0 0 0"/>
   <parent link="top_panel_link_1"/>
   <child link="imu_link_1"/>
+</joint>
+
+<joint name="Rigid_85" type="fixed">
+  <origin xyz="-0.207954 0.441881 0.8535" rpy="0 0 0"/>
+  <parent link="front_panel_link_1"/>
+  <child link="ultrasonic_front_left_1"/>
+</joint>
+
+<joint name="Rigid_86" type="fixed">
+  <origin xyz="-0.785954 0.441881 0.8535" rpy="0 0 0"/>
+  <parent link="front_panel_link_1"/>
+  <child link="ultrasonic_front_right_1"/>
+</joint>
+
+<joint name="Rigid_87" type="fixed">
+  <origin xyz="0.980909 0.1335 0.4375" rpy="0 0 0"/>
+  <parent link="right_panel_link_1"/>
+  <child link="ultrasonic_side_right_1"/>
+</joint>
+
+<joint name="Rigid_88" type="fixed">
+  <origin xyz="0.191091 1.082762 0.4535" rpy="0 0 0"/>
+  <parent link="left_panel_link_1"/>
+  <child link="ultrasonic_side_left_1"/>
+</joint>
+
+<joint name="Rigid_89" type="fixed">
+  <origin xyz="-0.786204 -0.763 0.8035" rpy="0 0 0"/>
+  <parent link="rear_panel_link_1"/>
+  <child link="ultrasonic_rear_right_1"/>
+</joint>
+
+<joint name="Rigid_90" type="fixed">
+  <origin xyz="-0.208204 -0.763 0.8035" rpy="0 0 0"/>
+  <parent link="rear_panel_link_1"/>
+  <child link="ultrasonic_rear_left_1"/>
 </joint>
 
 </robot>

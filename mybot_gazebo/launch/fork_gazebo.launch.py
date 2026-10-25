@@ -66,12 +66,12 @@ def generate_launch_description():
 
     declare_world = DeclareLaunchArgument(
         "world_name",
-        default_value="no_roof_small_warehouse.world",
+        default_value="no_roof_small_warehouse_box_removed.world",
         description="World file in mybot_gazebo/worlds.",
     )
     declare_xacro = DeclareLaunchArgument(
         "xacro_name",
-        default_value="fork_robot.urdf.xacro",
+        default_value="fork_redesigned_ultrasonic.urdf.xacro",
         description=(
             "Robot xacro in mybot_description/urdf. fork_robot.urdf.xacro wraps the "
             "Fusion export and adds base_footprint and ros2_control."
@@ -208,21 +208,42 @@ def generate_launch_description():
         ],
     )
 
-    scan_filter = Node(
-        package="laser_filters",
-        executable="scan_to_scan_filter_chain",
-        name="scan_filter_node",
+    # Ultrasonic safety guard. The ultrasonic_guard executable must be
+    # installed by the mybot_gazebo package (see setup.py/CMake install rules).
+    # Nav2 publishes to /cmd_vel_raw; the guard limits velocity and publishes
+    # the result to /cmd_vel for the drive controller.
+    ultrasonic_guard = Node(
+        package="mybot_gazebo",
+        executable="ultrasonic_guard",
+        name="ultrasonic_guard",
         output="screen",
-        parameters=[
-            os.path.join(pkg_gazebo, "config", "fork_scan_filter.yaml"),
-            {"use_sim_time": True},
-        ],
-        remappings=[
-            ("scan", "/scan"),
-            ("scan_filtered", "/scan_filtered"),
-        ],
+        parameters=[{
+            "use_sim_time": True,
+            "input_topic": "/cmd_vel_raw",
+            "output_topic": "/cmd_vel",
+            "front_stop": 0.25,
+            "front_slow": 0.60,
+            "rear_stop": 0.30,
+            "rear_slow": 0.70,
+            "side_stop": 0.05,
+            "stale_after": 0.5,
+            # False is convenient in simulation if sensor topics start late.
+            # Set true on hardware to stop when sensor data becomes stale.
+            "stop_on_stale": False,
+        }],
     )
 
+    scan_filter = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(
+                get_package_share_directory("mybot_slam"),
+                "launch", "scan_filter.launch.py")
+        ),
+        launch_arguments={
+            "use_sim_time": "true",
+            "filter_config": os.path.join(pkg_gazebo, "config", "fork_scan_filter.yaml"),
+        }.items(),
+    )
     return LaunchDescription([
         SetEnvironmentVariable("GAZEBO_MODEL_PATH", model_path),
         SetEnvironmentVariable("GAZEBO_RESOURCE_PATH", resource_path),
@@ -244,4 +265,5 @@ def generate_launch_description():
         spawn_diff_drive,
         spawn_fork_controller,
         scan_filter,
+        ultrasonic_guard,
     ])
