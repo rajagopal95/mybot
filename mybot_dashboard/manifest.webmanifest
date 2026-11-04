@@ -1,0 +1,16 @@
+{
+  "id": "./index.html",
+  "name": "Forklift OS · Autonomy Console",
+  "short_name": "Forklift OS",
+  "description": "ROS 2 operations dashboard for autonomous pallet handling",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f3f6f8",
+  "theme_color": "#101d2a",
+  "categories": ["productivity", "utilities"],
+  "icons": [
+    { "src": "./icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
