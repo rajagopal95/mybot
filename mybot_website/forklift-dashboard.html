@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Intelligent Pallet Handling with Autonomous Forklift</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/roslib@1.4.1/build/roslib.min.js"></script>
+<style>
+:root{--floor:#e7e4dd;--panel:#f6f4ef;--ink:#1f2a33;--mute:#6b7580;--line:#cfcac0;--yellow:#f2b705;--steel:#2f6f8f;--ok:#2e8b57;--bad:#c8402f}
+*{box-sizing:border-box}
+body{margin:0;background:var(--floor);color:var(--ink);font:15px/1.45 Barlow,system-ui,sans-serif}
+h1,h2{font-family:'Barlow Condensed',sans-serif;margin:0;letter-spacing:.2px}
+header{background:var(--ink);color:#fff;padding:14px 22px;display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;border-bottom:6px solid var(--yellow)}
+header h1{font-size:28px;line-height:1.05}
+header p{margin:2px 0 0;color:#aeb7bf;font-size:13px}
+.conn{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.conn input{width:210px;padding:7px 9px;border:1px solid #46525d;background:#2a3640;color:#fff;border-radius:4px;font:inherit}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--ink);padding:8px 12px;border-radius:4px;font-weight:600}
+button:hover{border-color:var(--ink)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--steel);outline-offset:1px}
+.primary{background:var(--yellow);border-color:var(--yellow)}
+.badge{padding:4px 10px;border-radius:99px;font-size:13px;font-weight:600;background:#46525d;color:#fff}
+.badge.live{background:var(--ok)}.badge.demo{background:var(--steel)}.badge.err{background:var(--bad)}
+main{display:grid;gap:16px;padding:16px;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);max-width:1500px;margin:auto}
+@media(max-width:980px){main{grid-template-columns:1fr}}
+section{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:14px}
+section h2{font-size:21px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+section h2 small{font:500 13px Barlow;color:var(--mute)}
+canvas{width:100%;display:block;background:#d9d5cb;border-radius:4px}
+#map{aspect-ratio:8/5;cursor:crosshair}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.stat{background:#fff;border:1px solid var(--line);border-radius:4px;padding:9px 11px}
+.stat span{display:block;color:var(--mute);font-size:13px}
+.stat b{font:700 24px 'Barlow Condensed'}
+.bar{height:10px;background:#ddd8cd;border-radius:5px;overflow:hidden;margin-top:6px}
+.bar i{display:block;height:100%;width:0;background:var(--ok);transition:width .4s}
+.pad{display:grid;grid-template-columns:repeat(3,64px);grid-auto-rows:54px;gap:6px;justify-content:center}
+.pad button{font-size:20px}
+.forkrow{display:flex;gap:8px;margin-top:12px;justify-content:center;flex-wrap:wrap}
+.estop{width:100%;margin-top:12px;background:var(--bad);color:#fff;border-color:var(--bad);font:700 20px 'Barlow Condensed';padding:12px;letter-spacing:.5px}
+label{font-size:13px;color:var(--mute)}
+input[type=range]{width:100%}
+.steps{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.steps li{padding:8px 10px;border:1px solid var(--line);border-left:6px solid var(--line);border-radius:4px;background:#fff;display:flex;justify-content:space-between}
+.steps li.done{border-left-color:var(--ok)}
+.steps li.now{border-left-color:var(--yellow);background:#fff7d6;font-weight:600}
+.cam{position:relative}
+.cam img,.cam canvas{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;border-radius:4px;background:#222}
+.cam .ov{position:absolute;inset:0;pointer-events:none}
+.dets{margin:10px 0 0;padding:0;list-style:none;display:grid;gap:5px}
+.dets li{display:flex;justify-content:space-between;background:#fff;border:1px solid var(--line);padding:6px 10px;border-radius:4px}
+#log{height:150px;overflow:auto;background:#1f2a33;color:#cfe3d4;font:12.5px/1.5 ui-monospace,Consolas,monospace;padding:8px 10px;border-radius:4px;margin:0;white-space:pre-wrap}
+.full{grid-column:1/-1}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--bad);margin-right:6px}
+.dot.on{background:var(--ok)}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>Intelligent Pallet Handling with Autonomous Forklift</h1>
+    <p>ROS 2 · Gazebo simulation · Nav2 · Final year project</p>
+  </div>
+  <div class="conn">
+    <input id="wsurl" value="ws://localhost:9090" aria-label="rosbridge WebSocket URL">
+    <button class="primary" id="btnConnect">Connect to ROS 2</button>
+    <button id="btnDemo">Run demo mode</button>
+    <span id="modeBadge" class="badge">Disconnected</span>
+  </div>
+</header>
+
+<main>
+  <section>
+    <h2>Warehouse map <small id="mapInfo">Waiting for /map</small></h2>
+    <canvas id="map" width="800" height="500"></canvas>
+    <p style="margin:8px 0 0;color:var(--mute);font-size:13px">Click anywhere on the map to send a navigation goal to the forklift.</p>
+  </section>
+
+  <div style="display:grid;gap:16px;align-content:start">
+    <section>
+      <h2>Robot status <small><span class="dot" id="linkDot"></span><span id="linkTxt">Offline</span></small></h2>
+      <div class="stats">
+        <div class="stat"><span>Battery</span><b id="batt">--</b><div class="bar"><i id="battBar"></i></div></div>
+        <div class="stat"><span>Speed</span><b id="speed">--</b></div>
+        <div class="stat"><span>Fork height</span><b id="fork">--</b></div>
+        <div class="stat"><span>State</span><b id="state">Idle</b></div>
+        <div class="stat"><span>Position (x, y)</span><b id="pos">--</b></div>
+        <div class="stat"><span>Heading</span><b id="yaw">--</b></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Manual control <small>Keys: W A S D · R / F for forks</small></h2>
+      <div class="pad">
+        <span></span><button data-v="1,0" aria-label="Forward">▲</button><span></span>
+        <button data-v="0,1" aria-label="Turn left">◀</button><button data-v="0,0" aria-label="Stop">■</button><button data-v="0,-1" aria-label="Turn right">▶</button>
+        <span></span><button data-v="-1,0" aria-label="Reverse">▼</button><span></span>
+      </div>
+      <label style="display:block;margin-top:12px">Max speed: <b id="spdLbl">0.5</b> m/s</label>
+      <input type="range" id="spd" min="0.1" max="1.0" step="0.1" value="0.5">
+      <div class="forkrow">
+        <button id="forkUp">Raise forks</button>
+        <button id="forkDn">Lower forks</button>
+      </div>
+      <button class="estop" id="estop">EMERGENCY STOP</button>
+    </section>
+  </div>
+
+  <section>
+    <h2>Camera &amp; pallet detection <small><span class="dot" id="camDot"></span><span id="camTxt">No feed</span></small></h2>
+    <div class="cam">
+      <img id="camImg" alt="Forklift camera feed" hidden>
+      <canvas id="camDemo" width="640" height="480"></canvas>
+      <canvas id="camOv" class="ov" width="640" height="480"></canvas>
+    </div>
+    <ul class="dets" id="dets"><li><span>No detections yet</span></li></ul>
+  </section>
+
+  <section>
+    <h2>Mission status <small id="missionTxt">No active mission</small></h2>
+    <ul class="steps" id="steps"></ul>
+    <div class="bar" style="height:12px;margin-top:12px"><i id="progBar" style="background:var(--yellow)"></i></div>
+  </section>
+
+  <section class="full">
+    <h2>System log</h2>
+    <pre id="log" aria-live="polite"></pre>
+  </section>
+</main>
+
+<script>
+/* ================= CONFIGURATION: edit topic names to match your robot ================= */
+const CFG = {
+  videoServer: 'http://localhost:8080',          // web_video_server
+  topics: {
+    map:       '/map',                           // nav_msgs/OccupancyGrid
+    pose:      '/amcl_pose',                     // geometry_msgs/PoseWithCovarianceStamped  (use /odom if no AMCL)
+    odom:      '/odom',                          // nav_msgs/Odometry (speed)
+    battery:   '/battery_state',                 // sensor_msgs/BatteryState
+    forkH:     '/fork_height',                   // std_msgs/Float32 (metres, feedback)
+    mission:   '/mission_status',                // std_msgs/String JSON: {"step":2,"text":"Detecting pallet","progress":35}
+    detect:    '/pallet_detections',             // std_msgs/String JSON: {"fps":14,"detections":[{"label":"pallet","conf":0.93,"bbox":[x,y,w,h]}],"img_w":640,"img_h":480}
+    camTopic:  '/camera/image_raw',              // streamed via web_video_server
+    cmdVel:    '/cmd_vel',                       // geometry_msgs/Twist
+    forkCmd:   '/fork_cmd',                      // std_msgs/Float32 (target height, metres)
+    estop:     '/emergency_stop',                // std_msgs/Bool
+    goal:      '/goal_pose'                      // geometry_msgs/PoseStamped
+  },
+  mapFrame: 'map', maxFork: 1.5
+};
+const STEPS = ['Navigate to pallet','Detect pallet','Align forks','Lift pallet','Transport to drop zone','Place pallet'];
+
+/* ================= helpers ================= */
+const $ = id => document.getElementById(id);
+const log = m => { const l=$('log'); l.textContent += `[${new Date().toLocaleTimeString()}] ${m}\n`; l.scrollTop=l.scrollHeight; };
+let mode='off', ros=null, pubs={}, mapData=null, robot={x:0,y:0,yaw:0}, forkTarget=0, vel={lin:0,ang:0}, demoTimer=null;
+
+/* ================= map drawing ================= */
+const mapC=$('map'), mctx=mapC.getContext('2d'); let mapImg=null;
+function setMap(w,h,res,ox,oy,data){
+  const c=document.createElement('canvas'); c.width=w; c.height=h;
+  const g=c.getContext('2d'), im=g.createImageData(w,h);
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+    const v=data[y*w+x], i=((h-1-y)*w+x)*4;
+    const col = v<0?200 : v>50?40 : 245;
+    im.data[i]=im.data[i+1]=im.data[i+2]=col; im.data[i+3]=255;
+  }
+  g.putImageData(im,0,0); mapImg=c; mapData={w,h,res,ox,oy};
+  $('mapInfo').textContent=`${w}×${h} cells · ${res} m/cell`; drawMap();
+}
+function w2p(x,y){ const s=Math.min(mapC.width/mapData.w,mapC.height/mapData.h);
+  return {px:(x-mapData.ox)/mapData.res*s, py:(mapData.h-(y-mapData.oy)/mapData.res)*s, s}; }
+function drawMap(){
+  mctx.fillStyle='#d9d5cb'; mctx.fillRect(0,0,mapC.width,mapC.height);
+  if(!mapImg) return;
+  const s=Math.min(mapC.width/mapData.w,mapC.height/mapData.h);
+  mctx.imageSmoothingEnabled=false; mctx.drawImage(mapImg,0,0,mapData.w*s,mapData.h*s);
+  const p=w2p(robot.x,robot.y);
+  mctx.save(); mctx.translate(p.px,p.py); mctx.rotate(-robot.yaw);
+  mctx.fillStyle='#f2b705'; mctx.strokeStyle='#1f2a33'; mctx.lineWidth=2;
+  mctx.beginPath(); mctx.rect(-12,-8,24,16); mctx.fill(); mctx.stroke();
+  mctx.fillStyle='#1f2a33'; mctx.fillRect(12,-7,12,3); mctx.fillRect(12,4,12,3);
+  mctx.restore();
+  if(goalPt){ mctx.strokeStyle='#2f6f8f'; mctx.lineWidth=3; mctx.beginPath(); mctx.arc(goalPt.px,goalPt.py,9,0,7); mctx.stroke(); }
+}
+let goalPt=null;
+mapC.addEventListener('click',e=>{
+  if(!mapData) return;
+  const r=mapC.getBoundingClientRect(), k=mapC.width/r.width;
+  const px=(e.clientX-r.left)*k, py=(e.clientY-r.top)*k, s=Math.min(mapC.width/mapData.w,mapC.height/mapData.h);
+  const x=mapData.ox+px/s*mapData.res, y=mapData.oy+(mapData.h-py/s)*mapData.res;
+  goalPt={px,py}; drawMap(); log(`Goal set → x=${x.toFixed(2)} y=${y.toFixed(2)}`);
+  if(mode==='live') pubs.goal.publish(new ROSLIB.Message({header:{frame_id:CFG.mapFrame},pose:{position:{x,y,z:0},orientation:{x:0,y:0,z:0,w:1}}}));
+  else if(mode==='demo') demo.target={x,y};
+});
+
+/* ================= UI updaters ================= */
+function setLink(on){ $('linkDot').classList.toggle('on',on); $('linkTxt').textContent=on?'Online':'Offline'; }
+function setBattery(pct){ $('batt').textContent=pct.toFixed(0)+'%'; const b=$('battBar'); b.style.width=pct+'%'; b.style.background=pct<20?'var(--bad)':pct<40?'var(--yellow)':'var(--ok)'; }
+function setPose(x,y,yaw){ robot={x,y,yaw}; $('pos').textContent=`${x.toFixed(1)}, ${y.toFixed(1)}`; $('yaw').textContent=(yaw*180/Math.PI).toFixed(0)+'°'; drawMap(); }
+function setMission(step,text,prog){
+  $('steps').innerHTML=STEPS.map((s,i)=>`<li class="${i<step?'done':i===step?'now':''}"><span>${s}</span><span>${i<step?'Done':i===step?'In progress':'Waiting'}</span></li>`).join('');
+  $('missionTxt').textContent=text||''; $('progBar').style.width=(prog??step/STEPS.length*100)+'%'; $('state').textContent=step>=STEPS.length?'Complete':(STEPS[step]||'Idle').split(' ')[0];
+}
+function setCam(on,fps){ $('camDot').classList.toggle('on',on); $('camTxt').textContent=on?`Streaming${fps?' · '+fps+' fps':''}`:'No feed'; }
+function setDetections(d){
+  const ov=$('camOv'), g=ov.getContext('2d'); g.clearRect(0,0,ov.width,ov.height);
+  const list=d.detections||[], sx=ov.width/(d.img_w||640), sy=ov.height/(d.img_h||480);
+  list.forEach(o=>{ const [x,y,w,h]=o.bbox; g.strokeStyle='#f2b705'; g.lineWidth=3; g.strokeRect(x*sx,y*sy,w*sx,h*sy);
+    const t=`${o.label} ${(o.conf*100).toFixed(0)}%`; g.font='600 16px Barlow'; g.fillStyle='#f2b705'; g.fillRect(x*sx,y*sy-22,g.measureText(t).width+10,22);
+    g.fillStyle='#1f2a33'; g.fillText(t,x*sx+5,y*sy-6); });
+  $('dets').innerHTML=list.length?list.map(o=>`<li><span>${o.label}</span><b>${(o.conf*100).toFixed(0)}% confidence</b></li>`).join(''):'<li><span>No pallet in view</span></li>';
+  setCam(true,d.fps);
+}
+
+/* ================= live ROS 2 mode (rosbridge) ================= */
+function connectROS(){
+  if(typeof ROSLIB==='undefined'){ log('roslib failed to load. Check internet connection.'); return; }
+  stopDemo(); const url=$('wsurl').value.trim(); log('Connecting to '+url+' …');
+  ros=new ROSLIB.Ros({url});
+  ros.on('connection',()=>{ mode='live'; badge('Live · ROS 2','live'); setLink(true); log('Connected to rosbridge.'); subscribeAll(); showStream(); });
+  ros.on('error',()=>{ badge('Connection error','err'); log('Could not reach rosbridge. Is it running on that address?'); });
+  ros.on('close',()=>{ if(mode==='live'){ mode='off'; badge('Disconnected',''); setLink(false); setCam(false); log('Connection closed.'); } });
+}
+const T=(name,type)=>new ROSLIB.Topic({ros,name,messageType:type});
+function subscribeAll(){
+  const t=CFG.topics;
+  pubs.vel=T(t.cmdVel,'geometry_msgs/Twist'); pubs.fork=T(t.forkCmd,'std_msgs/Float32');
+  pubs.estop=T(t.estop,'std_msgs/Bool'); pubs.goal=T(t.goal,'geometry_msgs/PoseStamped');
+  T(t.map,'nav_msgs/OccupancyGrid').subscribe(m=>{ const i=m.info; setMap(i.width,i.height,i.resolution,i.origin.position.x,i.origin.position.y,m.data); log('Map received from Gazebo/SLAM.'); });
+  const yawOf=q=>Math.atan2(2*(q.w*q.z+q.x*q.y),1-2*(q.y*q.y+q.z*q.z));
+  T(t.pose,'geometry_msgs/PoseWithCovarianceStamped').subscribe(m=>{const p=m.pose.pose; setPose(p.position.x,p.position.y,yawOf(p.orientation));});
+  T(t.odom,'nav_msgs/Odometry').subscribe(m=>{ $('speed').textContent=Math.abs(m.twist.twist.linear.x).toFixed(2)+' m/s'; });
+  T(t.battery,'sensor_msgs/BatteryState').subscribe(m=>setBattery(m.percentage<=1?m.percentage*100:m.percentage));
+  T(t.forkH,'std_msgs/Float32').subscribe(m=>{ $('fork').textContent=m.data.toFixed(2)+' m'; });
+  T(t.mission,'std_msgs/String').subscribe(m=>{ try{const j=JSON.parse(m.data); setMission(j.step,j.text,j.progress); log('Mission: '+j.text);}catch{ log('Mission: '+m.data);} });
+  T(t.detect,'std_msgs/String').subscribe(m=>{ try{setDetections(JSON.parse(m.data));}catch(e){} });
+}
+function showStream(){
+  const img=$('camImg'); img.src=`${CFG.videoServer}/stream?topic=${CFG.topics.camTopic}&type=mjpeg&width=640&height=480`;
+  img.onload=()=>{ img.hidden=false; $('camDemo').hidden=true; setCam(true); };
+  img.onerror=()=>{ setCam(false); log('Camera stream unavailable. Is web_video_server running?'); };
+}
+function badge(t,c){ const b=$('modeBadge'); b.textContent=t; b.className='badge '+c; }
+
+/* ================= publishing controls ================= */
+function sendVel(){ const s=+$('spd').value; const l=vel.lin*s, a=vel.ang*s*2;
+  if(mode==='live') pubs.vel.publish(new ROSLIB.Message({linear:{x:l,y:0,z:0},angular:{x:0,y:0,z:a}}));
+  if(mode==='demo') demo.cmd={l,a}; }
+let velTimer=null;
+function drive(l,a){ vel={lin:l,ang:a}; sendVel(); clearInterval(velTimer); if(l||a) velTimer=setInterval(sendVel,100); }
+document.querySelectorAll('.pad button').forEach(b=>{
+  const [l,a]=b.dataset.v.split(',').map(Number);
+  const down=e=>{e.preventDefault(); drive(l,a);}, up=()=>drive(0,0);
+  b.addEventListener('pointerdown',down); b.addEventListener('pointerup',up); b.addEventListener('pointerleave',up);
+});
+const keymap={w:[1,0],s:[-1,0],a:[0,1],d:[0,-1]};
+addEventListener('keydown',e=>{ if(e.target.tagName==='INPUT')return; const k=e.key.toLowerCase();
+  if(keymap[k]&&!e.repeat) drive(...keymap[k]); if(k==='r')moveFork(.1); if(k==='f')moveFork(-.1); if(k===' ')estop(); });
+addEventListener('keyup',e=>{ if(keymap[e.key.toLowerCase()]) drive(0,0); });
+function moveFork(d){ forkTarget=Math.min(CFG.maxFork,Math.max(0,forkTarget+d)); log('Fork target '+forkTarget.toFixed(2)+' m');
+  if(mode==='live') pubs.fork.publish(new ROSLIB.Message({data:forkTarget})); if(mode==='demo') $('fork').textContent=forkTarget.toFixed(2)+' m'; }
+function estop(){ drive(0,0); log('EMERGENCY STOP triggered.'); $('state').textContent='E-STOP';
+  if(mode==='live') pubs.estop.publish(new ROSLIB.Message({data:true})); if(mode==='demo'){demo.target=null;demo.cmd={l:0,a:0};} }
+$('forkUp').onclick=()=>moveFork(.1); $('forkDn').onclick=()=>moveFork(-.1); $('estop').onclick=estop;
+$('spd').oninput=e=>$('spdLbl').textContent=e.target.value;
+$('btnConnect').onclick=connectROS;
+$('btnDemo').onclick=()=>mode==='demo'?stopDemo(true):startDemo();
+
+/* ================= demo mode (no ROS needed) ================= */
+const demo={cmd:{l:0,a:0},target:null,t:0,batt:87};
+function demoMap(){
+  const w=80,h=50,d=new Array(w*h).fill(0);
+  const rect=(x0,y0,x1,y1)=>{for(let y=y0;y<y1;y++)for(let x=x0;x<x1;x++)d[y*w+x]=100;};
+  rect(0,0,w,1);rect(0,h-1,w,h);rect(0,0,1,h);rect(w-1,0,w,h);
+  for(let i=0;i<4;i++){ rect(10+i*14,8,13+i*14,22); rect(10+i*14,28,13+i*14,42); }
+  rect(68,18,75,32); setMap(w,h,0.25,-10,-6.25,d);
+}
+function drawDemoCam(){
+  const c=$('camDemo'),g=c.getContext('2d'); g.fillStyle='#4a4f55'; g.fillRect(0,0,640,480);
+  g.fillStyle='#6a7078'; g.fillRect(0,300,640,180);
+  const sway=Math.sin(demo.t/30)*18;
+  g.fillStyle='#b98a4e'; g.fillRect(200+sway,240,240,60); g.fillStyle='#8f6a39';
+  for(let i=0;i<4;i++) g.fillRect(205+sway+i*60,300,40,28);
+  g.fillStyle='#d8b27a'; g.fillRect(215+sway,190,210,50);
+  return sway;
+}
+function startDemo(){
+  clearInterval(demoTimer); if(ros) ros.close(); mode='demo'; badge('Demo mode','demo'); setLink(true); $('camImg').hidden=true; $('camDemo').hidden=false;
+  log('Demo mode started with simulated data.'); demoMap(); robot={x:-8,y:0,yaw:0}; demo.t=0; demo.target={x:-1.5,y:0.2}; setBattery(demo.batt);
+  const names=['Idle'];
+  demoTimer=setInterval(()=>{
+    demo.t++;
+    if(demo.target){ const dx=demo.target.x-robot.x, dy=demo.target.y-robot.y, dist=Math.hypot(dx,dy);
+      if(dist<0.2){ demo.target=null; goalPt=null; log('Goal reached.'); } else { robot.yaw=Math.atan2(dy,dx); demo.cmd={l:0.6,a:0}; } }
+    else if(!demo.cmd.l&&!demo.cmd.a) demo.cmd={l:0,a:0};
+    robot.yaw+=demo.cmd.a*0.1; robot.x+=Math.cos(robot.yaw)*demo.cmd.l*0.1; robot.y+=Math.sin(robot.yaw)*demo.cmd.l*0.1;
+    setPose(robot.x,robot.y,robot.yaw); $('speed').textContent=Math.abs(demo.cmd.l).toFixed(2)+' m/s';
+    if(demo.t%100===0){ demo.batt=Math.max(5,demo.batt-0.3); setBattery(demo.batt); }
+    const phase=Math.floor(demo.t/120)%7; const prog=(demo.t%840)/840*100;
+    if(demo.t%120===0){ setMission(Math.min(phase,6),STEPS[phase]||'Mission complete',prog); if(phase<6) log('Mission: '+STEPS[phase]); }
+    const sway=drawDemoCam(); const found=phase>=1&&phase<=3;
+    setDetections({fps:15,img_w:640,img_h:480,detections:found?[{label:'pallet',conf:0.9+Math.sin(demo.t/10)*0.05,bbox:[200+sway,185,240,145]}]:[]});
+    if(demo.t===1) $('fork').textContent='0.00 m';
+  },100);
+}
+function stopDemo(manual){ clearInterval(demoTimer); if(mode==='demo'){ mode='off'; if(manual){badge('Disconnected',''); setLink(false); setCam(false); log('Demo stopped.');} } }
+
+/* ================= init ================= */
+setMission(0,'No active mission'); setCam(false);
+log('Dashboard ready. Click "Run demo mode" or "Connect to ROS 2".');
+</script>
+</body>
+</html>
