@@ -66,12 +66,12 @@ def generate_launch_description():
 
     declare_world = DeclareLaunchArgument(
         "world_name",
-        default_value="no_roof_small_warehouse_box_removed.world",
+        default_value="no_roof_small_warehouse.world",
         description="World file in mybot_gazebo/worlds.",
     )
     declare_xacro = DeclareLaunchArgument(
         "xacro_name",
-        default_value="fork_redesigned_ultrasonic.urdf.xacro",
+        default_value="fork_redesigned.urdf.xacro",
         description=(
             "Robot xacro in mybot_description/urdf. fork_robot.urdf.xacro wraps the "
             "Fusion export and adds base_footprint and ros2_control."
