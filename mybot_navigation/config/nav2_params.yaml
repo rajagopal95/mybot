@@ -1,17 +1,23 @@
 # Nav2 params for ROS 2 Humble, differential drive warehouse forklift robot
-# Controllers: MPPI (primary, "FollowPath") + DWB (fallback, "DWB")
-# Planners:    Smac Hybrid-A* "GridBased" (primary, footprint-aware, can reverse)
-#              + Theta* + NavFn (fallbacks)
+# Controller:  Regulated Pure Pursuit ("FollowPath") for AGV-style straight line
+#              following. MPPI kept as "MPPI" (unused by the behavior tree).
+# Behavior tree: plan once, no replanning, no spin (navigate_straight_no_replan.xml)
+# Planner:     Smac Hybrid-A* "GridBased" only (footprint-aware, can reverse)
+#              NavFn / Theta* / DWB removed: they do not check the full polygon
+#              and the default behavior tree never calls them.
 #
 # Tuned for narrow spaces (warehouse aisles 0.9m - 1.2m):
-# - Exact polygonal footprint matching forklift chassis & tapered forks
-# - 0.30 m inflation with a steep decay: the real 0.78 m footprint remains
-#   collision-checked, while a 0.9 m aisle is no longer treated as unusable.
+# - Polygonal footprint measured from the STL meshes (origin = axle midpoint):
+#   about 1.07 m long (0.15 m ahead, 0.93 m behind), 0.62 m wide at the wheels,
+#   narrow forks (+-0.15 m) at the rear. Same polygon in both costmaps.
+# - footprint_padding 0.01 m in both costmaps (they must match).
+# - 0.5 m inflation, cost_scaling_factor 10.0 in BOTH costmaps and the MPPI
+#   ObstaclesCritic (the critic must equal the inflation layers).
 # - MPPI: low repulsion weight and a 0.02 m collision margin.  Obstacles and
 #   the footprint are still lethal; this only removes excessive soft clearance.
 # - Velocity limits smoothed for 270 kg AMR: max 0.35 m/s, max 0.60 rad/s,
 #   reverse up to 0.20 m/s so it can back out of tight spots
-# - Ultrasonic range_layer enabled in the LOCAL costmap for obstacles below the lidar plane
+# - Ultrasonic range_layer enabled in the LOCAL and GLOBAL costmaps for obstacles below the lidar plane
 # - Consistent odometry topic: /odometry/filtered (fused with TF)
 
 amcl:
@@ -69,7 +75,7 @@ bt_navigator:
     global_frame: map
     robot_base_frame: base_footprint
     odom_topic: /odometry/filtered
-    default_nav_to_pose_bt_xml: "/opt/ros/humble/share/nav2_bt_navigator/behavior_trees/navigate_to_pose_w_replanning_and_recovery.xml"
+    default_nav_to_pose_bt_xml: "/home/raja/mybot_ws/src/mybot/mybot_navigation/behavior_trees/navigate_straight_no_replan.xml"
     default_nav_through_poses_bt_xml: "/opt/ros/humble/share/nav2_bt_navigator/behavior_trees/navigate_to_pose_w_replanning_and_recovery.xml"
     plugin_lib_names:
       - nav2_compute_path_to_pose_action_bt_node
@@ -100,9 +106,13 @@ controller_server:
     min_x_velocity_threshold: 0.05
     min_y_velocity_threshold: 0.001
     min_theta_velocity_threshold: 0.05
+    # The controller reads its current speed from this topic. The default is
+    # "odom", which does not exist here, so the controller saw zero speed.
+    odom_topic: "/odometry/filtered"
+    odom_duration: 0.1
     progress_checker_plugin: "progress_checker"
     goal_checker_plugins: ["general_goal_checker"]
-    controller_plugins: ["FollowPath", "DWB"]
+    controller_plugins: ["FollowPath", "MPPI"]
 
     progress_checker:
       plugin: "nav2_controller::PoseProgressChecker"
@@ -113,11 +123,44 @@ controller_server:
     general_goal_checker:
       stateful: True
       plugin: "nav2_controller::SimpleGoalChecker"
-      xy_goal_tolerance: 0.15
-      yaw_goal_tolerance: 0.15
+      xy_goal_tolerance: 0.20
+      yaw_goal_tolerance: 0.25
 
-    # ---------------- Primary: MPPI ----------------
+    # ---------------- Regulated Pure Pursuit (AGV-style) ----------------
+    # Tracks the planned path tightly with no random sampling, so a straight
+    # path gives a straight drive. Rotates in place only for a large heading
+    # error at the start or to match the goal yaw.
     FollowPath:
+      plugin: "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"
+      desired_linear_vel: 0.30
+      lookahead_dist: 0.6
+      min_lookahead_dist: 0.3
+      max_lookahead_dist: 0.9
+      lookahead_time: 1.5
+      use_velocity_scaled_lookahead_dist: false
+      transform_tolerance: 0.1
+      # The robot did not move at 0.05 m/s (backup timed out), so slowing to
+      # that near the goal would stall it short of the goal.
+      min_approach_linear_velocity: 0.15
+      approach_velocity_scaling_dist: 0.6
+      use_collision_detection: true
+      # Look 2 s ahead (0.6 m at 0.30 m/s) so the robot stops and replans
+      # while there is still room to turn toward a gap.
+      max_allowed_time_to_collision_up_to_carrot: 2.0
+      use_regulated_linear_velocity_scaling: false
+      use_cost_regulated_linear_velocity_scaling: false
+      use_rotate_to_heading: true
+      rotate_to_heading_angular_vel: 0.5
+      rotate_to_heading_min_angle: 0.785
+      # Pure pursuit limits each rotation step to (measured speed + accel * dt).
+      # From a standstill that is accel * 0.05 s. At 1.5 it was 0.075 rad/s,
+      # too small for the robot to start moving, so it never started.
+      # At 6.0 the first step is 0.3 rad/s.
+      max_angular_accel: 6.0
+      allow_reversing: false
+
+    # ---------------- MPPI (not used by the behavior tree) ----------------
+    MPPI:
       plugin: "nav2_mppi_controller::MPPIController"
       motion_model: "DiffDrive"
       # Keep the optimizer inside the 20 Hz control budget on the simulation PC.
@@ -148,8 +191,8 @@ controller_server:
         near_goal_distance: 0.4
         critical_weight: 20.0
         repulsion_weight: 0.08
-        cost_scaling_factor: 10.0  # matches inflation_layer
-        inflation_radius: 0.55     # matches inflation_layer
+        cost_scaling_factor: 10.0  # must equal both inflation layers
+        inflation_radius: 0.5      # must equal both inflation layers
 
       PathAlignCritic:
         enabled: true
@@ -200,48 +243,6 @@ controller_server:
         cost_power: 1
         cost_weight: 4.0
 
-    # ---------------- Fallback: DWB ----------------
-    DWB:
-      plugin: "dwb_core::DWBLocalPlanner"
-      debug_trajectory_details: False
-      min_vel_x: 0.0
-      min_vel_y: 0.0
-      max_vel_x: 0.35
-      max_vel_y: 0.0
-      max_vel_theta: 0.60
-      min_speed_xy: 0.0
-      max_speed_xy: 0.35
-      min_speed_theta: 0.0
-      acc_lim_x: 1.5
-      acc_lim_y: 0.0
-      acc_lim_theta: 2.0
-      decel_lim_x: -1.5
-      decel_lim_y: 0.0
-      decel_lim_theta: -2.0
-      vx_samples: 20
-      vy_samples: 1
-      vtheta_samples: 20
-      sim_time: 1.7
-      linear_granularity: 0.05
-      angular_granularity: 0.025
-      transform_tolerance: 0.2
-      xy_goal_tolerance: 0.15
-      trans_stopped_velocity: 0.05
-      short_circuit_trajectory_evaluation: True
-      stateful: True
-      critics: ["RotateToGoal", "Oscillation", "BaseObstacle",
-                "GoalAlign", "PathAlign", "PathDist", "GoalDist"]
-      BaseObstacle.scale: 0.04
-      PathAlign.scale: 32.0
-      PathAlign.forward_point_distance: 0.1
-      GoalAlign.scale: 24.0
-      GoalAlign.forward_point_distance: 0.1
-      PathDist.scale: 32.0
-      GoalDist.scale: 24.0
-      RotateToGoal.scale: 32.0
-      RotateToGoal.slowing_factor: 5.0
-      RotateToGoal.lookahead_time: -1.0
-
 local_costmap:
   local_costmap:
     ros__parameters:
@@ -251,12 +252,13 @@ local_costmap:
       robot_base_frame: base_footprint
       use_sim_time: true
       rolling_window: true
-      # The footprint is 0.78 m wide.  Four metres leaves enough observed map
-      # for a safe reverse/exit manoeuvre when an aisle is blocked.
+      # The robot is about 1.07 m long and 0.62 m wide.  Four metres leaves
+      # enough observed map for a safe reverse/exit manoeuvre when an aisle
+      # is blocked.
       width: 4
       height: 4
       resolution: 0.05
-      footprint: "[[0.05, 0.38], [-0.43, 0.38], [-0.92, 0.14], [-0.92, -0.14], [-0.43, -0.38], [0.05, -0.38]]"
+      footprint: "[[0.15, 0.07], [0.05, 0.07], [0.05, 0.32], [-0.05, 0.32], [-0.05, 0.28], [-0.46, 0.28], [-0.46, 0.15], [-0.93, 0.15], [-0.93, -0.15], [-0.46, -0.15], [-0.46, -0.28], [-0.05, -0.28], [-0.05, -0.32], [0.05, -0.32], [0.05, -0.07], [0.15, -0.07]]"
       footprint_padding: 0.01
       publish_footprint: true
       # range_layer (ultrasonics) added; inflation_layer must stay LAST so it
@@ -265,7 +267,7 @@ local_costmap:
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         cost_scaling_factor: 10.0
-        inflation_radius: 0.55
+        inflation_radius: 0.5
 
       range_layer:
         plugin: "nav2_costmap_2d::RangeSensorLayer"
@@ -304,12 +306,12 @@ global_costmap:
       global_frame: map
       robot_base_frame: base_footprint
       use_sim_time: true
-      footprint: "[[0.05, 0.38], [-0.43, 0.38], [-0.92, 0.14], [-0.92, -0.14], [-0.43, -0.38], [0.05, -0.38]]"
-      footprint_padding: 0.07
+      footprint: "[[0.15, 0.07], [0.05, 0.07], [0.05, 0.32], [-0.05, 0.32], [-0.05, 0.28], [-0.46, 0.28], [-0.46, 0.15], [-0.93, 0.15], [-0.93, -0.15], [-0.46, -0.15], [-0.46, -0.28], [-0.05, -0.28], [-0.05, -0.32], [0.05, -0.32], [0.05, -0.07], [0.15, -0.07]]"
+      footprint_padding: 0.01
       publish_footprint: true
       resolution: 0.05
       track_unknown_space: true
-      plugins: ["static_layer", "obstacle_layer", "inflation_layer"]
+      plugins: ["static_layer", "obstacle_layer", "range_layer", "inflation_layer"]
       obstacle_layer:
         plugin: "nav2_costmap_2d::ObstacleLayer"
         enabled: True
@@ -326,13 +328,14 @@ global_costmap:
         plugin: "nav2_costmap_2d::StaticLayer"
         map_subscribe_transient_local: True
 
-      # Defined but intentionally NOT in plugins (ultrasonics are local-costmap only)
+      # Ultrasonics are also in the global costmap, so a replan routes around
+      # obstacles that sit below the lidar plane.
       range_layer:
         plugin: "nav2_costmap_2d::RangeSensorLayer"
         topics: ["/ultrasonic_front_left", "/ultrasonic_front_right",
                  "/ultrasonic_rear_left", "/ultrasonic_rear_right",
                  "/ultrasonic_side_left", "/ultrasonic_side_right"]
-        phi: 1.2
+        phi: 0.26                # same as local costmap; set to the sensor's field_of_view (rad)
         clear_on_max_reading: true
         clear_threshold: 0.2
         mark_threshold: 0.8
@@ -341,7 +344,7 @@ global_costmap:
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         cost_scaling_factor: 10.0
-        inflation_radius: 0.55
+        inflation_radius: 0.5
       always_send_full_costmap: True
 
 map_server:
@@ -353,46 +356,35 @@ planner_server:
   ros__parameters:
     use_sim_time: true
     expected_planner_frequency: 1.0
-    planner_plugins: ["GridBased", "ThetaStar", "NavFn"]
+    planner_plugins: ["GridBased"]
 
-    # Footprint-aware Hybrid-A*. SmacPlanner2D planned for a single point, so it
-    # could produce paths too tight for the long forklift footprint. Plugin name
-    # "GridBased" is kept so the behavior tree still finds it.
+    # Footprint-aware Hybrid-A*. Plugin name "GridBased" is kept so the
+    # behavior tree still finds it.
     GridBased:
       plugin: "nav2_smac_planner/SmacPlannerHybrid"
-      tolerance: 0.25
+      tolerance: 0.05
       downsample_costmap: false
       downsampling_factor: 1
       allow_unknown: true
       max_iterations: 1000000
       max_on_approach_iterations: 1000
       max_planning_time: 2.0
-      motion_model_for_search: "REEDS_SHEPP"   # allows reversing out of dead ends
+      # Forward-only. Pure pursuit cannot follow the reverse segments that
+      # REEDS_SHEPP plans, so the robot stalled at the first reversal. Switch
+      # back to REEDS_SHEPP only with a controller that can reverse.
+      motion_model_for_search: "DUBIN"
       angle_quantization_bins: 72
       minimum_turning_radius: 0.2              # starting guess, tune for the robot
       analytic_expansion_ratio: 3.5
-      reverse_penalty: 1.2
+      reverse_penalty: 2.0                     # reverse when needed, not casually (lidar can't see behind)
       change_penalty: 0.0
-      non_straight_penalty: 1.2
+      non_straight_penalty: 2.0
       # Let Hybrid-A* use the centre of a traversable aisle.  Lethal cells and
       # the polygonal footprint remain hard constraints.
       cost_penalty: 1.3
       lookup_table_size: 20.0
-      cache_obstacle_heuristic: false
+      cache_obstacle_heuristic: true           # faster replans to the same goal
       smooth_path: true
-
-    ThetaStar:
-      plugin: "nav2_theta_star_planner/ThetaStarPlanner"
-      how_many_corners: 8
-      w_euc_cost: 1.0
-      w_traversal_cost: 2.0
-      w_heuristic_cost: 1.0
-
-    NavFn:
-      plugin: "nav2_navfn_planner/NavfnPlanner"
-      tolerance: 0.20
-      use_astar: true
-      allow_unknown: true
 
 smoother_server:
   ros__parameters:
