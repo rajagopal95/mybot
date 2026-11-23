@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Navigate to a single pose with one plan and one path-following attempt.
+
+  This intentionally omits Nav2's recovery, replanning, and spin nodes.  It is
+  used by default_nav_to_pose_bt_xml in config/nav2_params.yaml.
+-->
+<root main_tree_to_execute="MainTree">
+  <BehaviorTree ID="MainTree">
+    <PipelineSequence name="NavigateStraightNoReplan">
+      <ComputePathToPose goal="{goal}" path="{path}" planner_id="GridBased"/>
+      <FollowPath path="{path}" controller_id="FollowPath"/>
+    </PipelineSequence>
+  </BehaviorTree>
+</root>
