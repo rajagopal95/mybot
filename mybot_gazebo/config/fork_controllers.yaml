@@ -28,7 +28,7 @@ diff_drive_controller:
     # Starting values: wheel-center spacing (0.679 m, the collision cylinders sit at the link origins) and
     # the 0.053 m collision-cylinder radius in fork_robot.urdf.xacro (keep them equal).
     # Calibrate against odom after a test drive.
-    wheel_separation: 0.679
+    wheel_separation: 0.5776
     wheel_radius: 0.053
     left_wheel_radius_multiplier: 1.0
     right_wheel_radius_multiplier: 1.0
@@ -71,4 +71,4 @@ joint_state_broadcaster:
 
 fork_position_controller:
   ros__parameters:
-    joints: ["Slider_43"]
+    joints: ["Slider_128"]

@@ -1,0 +1,1550 @@
+<?xml version="1.0" ?>
+<robot name="fork_redesigned" xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <xacro:arg name="use_camera" default="false" />
+
+<material name="silver">
+  <color rgba="0.700 0.700 0.700 1.000"/>
+</material>
+
+
+<link name="base_link">
+  <inertial>
+    <origin xyz="-0.20795469184056845 0.6059726874768782 0.0024999999999999988" rpy="0 0 0"/>
+    <mass value="5.803455309747966"/>
+    <inertia ixx="0.045914" iyy="0.111394" izz="0.157284" ixy="0.0" iyz="0.0" ixz="0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/base_link.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/base_link.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="left_motor_link_1">
+  <inertial>
+    <origin xyz="-0.025746401927791592 -5.590644955644208e-06 0.006676741521228598" rpy="0 0 0"/>
+    <mass value="0.12785022222079845"/>
+    <inertia ixx="2.3e-05" iyy="5.6e-05" izz="5.6e-05" ixy="-0.0" iyz="0.0" ixz="2e-06"/>
+  </inertial>
+  <visual>
+    <origin xyz="-0.046591 -0.481881 0.034" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/left_motor_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="-0.046591 -0.481881 0.034" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/left_motor_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="right_motor_link_1">
+  <inertial>
+    <origin xyz="0.025746018246653235 3.979878347382115e-06 0.0066732309909901845" rpy="0 0 0"/>
+    <mass value="0.12785022222079845"/>
+    <inertia ixx="2.3e-05" iyy="5.6e-05" izz="5.6e-05" ixy="-0.0" iyz="-0.0" ixz="-2e-06"/>
+  </inertial>
+  <visual>
+    <origin xyz="0.4625 -0.481881 0.034" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/right_motor_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="0.4625 -0.481881 0.034" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/right_motor_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="left_wheel_link_1">
+  <inertial>
+    <origin xyz="2.7720433450062476e-07 -2.0531275590762732e-07 3.703704010149522e-13" rpy="0 0 0"/>
+    <mass value="1.9401899677229664"/>
+    <inertia ixx="0.002715" iyy="0.001642" izz="0.001642" ixy="0.0" iyz="-0.0" ixz="0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="-0.080339 -0.481881 0.034" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/left_wheel_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="-0.080339 -0.481881 0.034" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/left_wheel_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="right_wheel_link_1">
+  <inertial>
+    <origin xyz="-3.5186992197733247e-07 -2.0517171450684657e-07 2.986638714119749e-13" rpy="0 0 0"/>
+    <mass value="1.9401899677229664"/>
+    <inertia ixx="0.002715" iyy="0.001642" izz="0.001642" ixy="0.0" iyz="-0.0" ixz="0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="0.497251 -0.481881 0.034" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/right_wheel_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="0.497251 -0.481881 0.034" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/right_wheel_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="fork_coupling_link_1">
+  <inertial>
+    <origin xyz="3.705325111180713e-07 -1.826110224145694e-07 -0.003490428234809051" rpy="0 0 0"/>
+    <mass value="0.012051917875242903"/>
+    <inertia ixx="0.0" iyy="0.0" izz="1e-06" ixy="0.0" iyz="0.0" ixz="0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="0.208955 -0.800881 -0.14442" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/fork_coupling_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="0.208955 -0.800881 -0.14442" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/fork_coupling_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="fork_center_slot_1">
+  <inertial>
+    <origin xyz="3.0815943902195997e-07 0.020000494982010952 -0.011399999999995525" rpy="0 0 0"/>
+    <mass value="0.39467195073133987"/>
+    <inertia ixx="0.000117" iyy="0.002456" izz="0.002456" ixy="0.0" iyz="-0.0" ixz="0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="0.208955 -0.824421 -0.13292" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/fork_center_slot_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="0.208955 -0.824421 -0.13292" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/fork_center_slot_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="fork_left_link_1">
+  <inertial>
+    <origin xyz="-0.016999691840535375 0.25000049498201105 0.020000000000036586" rpy="0 0 0"/>
+    <mass value="0.7308739828358146"/>
+    <inertia ixx="0.015334" iyy="0.000216" izz="0.015334" ixy="-0.0" iyz="-0.0" ixz="0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="0.073955 -0.904421 0.01148" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/fork_left_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="0.073955 -0.904421 0.01148" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/fork_left_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="fork_right_link_1">
+  <inertial>
+    <origin xyz="0.020000308159456304 0.2500004949820257 0.01700000000003189" rpy="0 0 0"/>
+    <mass value="0.730873982835814"/>
+    <inertia ixx="0.015334" iyy="0.000216" izz="0.015334" ixy="-0.0" iyz="-0.0" ixz="0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="0.343955 -0.904421 0.01148" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/fork_right_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="0.343955 -0.904421 0.01148" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/fork_right_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="left_caster_link_1">
+  <inertial>
+    <origin xyz="0.0323283745581979 -0.009671932993636001 -0.039792097393055066" rpy="0 0 0"/>
+    <mass value="0.12150975817789704"/>
+    <inertia ixx="0.00015" iyy="8.9e-05" izz="9.4e-05" ixy="-2e-06" iyz="4.5e-05" ixz="1e-06"/>
+  </inertial>
+  <visual>
+    <origin xyz="0.004955 -0.901881 -0.005" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/left_caster_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="0.004955 -0.901881 -0.005" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/left_caster_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="right_caster_link_1">
+  <inertial>
+    <origin xyz="-0.03249968838843048 -0.01040190184053158 -0.03942068950412225" rpy="0 0 0"/>
+    <mass value="0.12271576702932177"/>
+    <inertia ixx="0.000159" iyy="9.1e-05" izz="0.000101" ixy="0.0" iyz="4.8e-05" ixz="-0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="0.410955 -0.901881 -0.005" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/right_caster_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="0.410955 -0.901881 -0.005" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/right_caster_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="fork_left_h_slot_1">
+  <inertial>
+    <origin xyz="-0.016999691840558134 0.02000049498201173 -0.0749999999999916" rpy="0 0 0"/>
+    <mass value="0.21926219485074405"/>
+    <inertia ixx="0.000444" iyy="0.000444" izz="6.5e-05" ixy="0.0" iyz="0.0" ixz="0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="0.073955 -0.864421 -0.13852" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/fork_left_h_slot_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="0.073955 -0.864421 -0.13852" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/fork_left_h_slot_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="fork_right_h_slot_1">
+  <inertial>
+    <origin xyz="0.017000308159592414 0.020000494982023165 -0.0749999999999919" rpy="0 0 0"/>
+    <mass value="0.21926219485074516"/>
+    <inertia ixx="0.000444" iyy="0.000444" izz="6.5e-05" ixy="0.0" iyz="0.0" ixz="-0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="0.343955 -0.864421 -0.13852" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/fork_right_h_slot_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="0.343955 -0.864421 -0.13852" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/fork_right_h_slot_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="front_bottom_slot_link_1">
+  <inertial>
+    <origin xyz="3.081594328602222e-07 0.016999794757658004 0.020000000000151952" rpy="0 0 0"/>
+    <mass value="0.5846991862686549"/>
+    <inertia ixx="0.000173" iyy="0.007882" izz="0.007882" ixy="-0.0" iyz="0.0" ixz="0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="0.207955 -0.454881 -0.005" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/front_bottom_slot_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="0.207955 -0.454881 -0.005" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/front_bottom_slot_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="fork_front_slot_right_link_1">
+  <inertial>
+    <origin xyz="0.017000308159433153 0.019999794757657396 0.23000000000000614" rpy="0 0 0"/>
+    <mass value="0.6724040642089485"/>
+    <inertia ixx="0.011956" iyy="0.011956" izz="0.000199" ixy="0.0" iyz="0.0" ixz="-0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="0.444955 -0.451881 -0.045" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/fork_front_slot_right_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="0.444955 -0.451881 -0.045" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/fork_front_slot_right_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="fork_front_slot_left_link_1">
+  <inertial>
+    <origin xyz="-0.01699969184056261 0.019999794757658007 0.22999999999999526" rpy="0 0 0"/>
+    <mass value="0.6724040642089485"/>
+    <inertia ixx="0.011956" iyy="0.011956" izz="0.000199" ixy="0.0" iyz="0.0" ixz="-0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="-0.029045 -0.451881 -0.045" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/fork_front_slot_left_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="-0.029045 -0.451881 -0.045" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/fork_front_slot_left_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="rear_bottom_slot_link_1">
+  <inertial>
+    <origin xyz="-0.00024969184056747307 -0.016999999999999904 0.020000000000151927" rpy="0 0 0"/>
+    <mass value="0.5839683122858196"/>
+    <inertia ixx="0.000172" iyy="0.007853" izz="0.007853" ixy="0.0" iyz="0.0" ixz="0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="0.207955 -0.76 -0.005" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/rear_bottom_slot_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="0.207955 -0.76 -0.005" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/rear_bottom_slot_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="fork_rear_slot_left_link_1">
+  <inertial>
+    <origin xyz="0.003954308159446224 0.24599979475765743 1.1468809999999938" rpy="0 0 0"/>
+    <mass value="1.3155731691044652"/>
+    <inertia ixx="0.088995" iyy="0.088995" izz="0.000389" ixy="-0.0" iyz="-0.0" ixz="-0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="-0.007091 -0.496881 0.651881" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/fork_rear_slot_left_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="-0.007091 -0.496881 0.651881" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/fork_rear_slot_left_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="front_panel_link_1">
+  <inertial>
+    <origin xyz="3.0815943777295907e-07 -0.002500205242342235 0.246999999999999" rpy="0 0 0"/>
+    <mass value="9.42"/>
+    <inertia ixx="0.19627" iyy="0.377114" izz="0.180884" ixy="-0.0" iyz="0.0" ixz="-0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="0.207955 -0.451881 -0.008" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/front_panel_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="0.207955 -0.451881 -0.008" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/front_panel_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="ultrasonic_side_left_1">
+  <inertial>
+    <origin xyz="-0.028052268925181312 -0.459881293811757 -0.48277897105527917" rpy="0 0 0"/>
+    <mass value="0.029441365273187678"/>
+    <inertia ixx="6e-06" iyy="1e-06" izz="5e-06" ixy="-0.0" iyz="0.0" ixz="-0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="-0.069091 -1.067762 -0.5375" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/ultrasonic_side_left_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="-0.069091 -1.067762 -0.5375" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/ultrasonic_side_left_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="ultrasonic_rear_right_1">
+  <inertial>
+    <origin xyz="0.47595439672884804 0.7718742176730425 -0.7357789710552561" rpy="0 0 0"/>
+    <mass value="0.029441365273187678"/>
+    <inertia ixx="1e-06" iyy="6e-06" izz="5e-06" ixy="0.0" iyz="-0.0" ixz="-0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="0.891909 -0.0 -0.8455" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/ultrasonic_rear_right_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="0.891909 -0.0 -0.8455" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/ultrasonic_rear_right_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="Webcam_1">
+  <inertial>
+    <origin xyz="3.0815942445028277e-07 0.009262291980458137 0.015000000000013218" rpy="0 0 0"/>
+    <mass value="0.4001003373748857"/>
+    <inertia ixx="3.8e-05" iyy="0.000312" izz="0.000299" ixy="0.0" iyz="0.0" ixz="0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="0.207205 -0.818881 -0.0506" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/Webcam_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="0.207205 -0.818881 -0.0506" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/Webcam_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="right_bottom_slot_link_1">
+  <inertial>
+    <origin xyz="-0.01999969184072281 0.22499979475765797 -0.016999999999994044" rpy="0 0 0"/>
+    <mass value="0.6577865845522363"/>
+    <inertia ixx="0.011197" iyy="0.000194" izz="0.011197" ixy="0.0" iyz="0.0" ixz="-0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="0.407955 -0.451881 -0.042" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/right_bottom_slot_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="0.407955 -0.451881 -0.042" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/right_bottom_slot_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="left_bottom_slot_link_1">
+  <inertial>
+    <origin xyz="0.020000308159279286 0.22499979475765852 -0.01700000000000499" rpy="0 0 0"/>
+    <mass value="0.6577865845522363"/>
+    <inertia ixx="0.011197" iyy="0.000194" izz="0.011197" ixy="0.0" iyz="-0.0" ixz="-0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="0.007955 -0.451881 -0.042" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/left_bottom_slot_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="0.007955 -0.451881 -0.042" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/left_bottom_slot_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="right_motor_holder_link_1">
+  <inertial>
+    <origin xyz="-0.02162070548295275 0.01499979475599339 -0.0101518474274165" rpy="0 0 0"/>
+    <mass value="0.061662152889289286"/>
+    <inertia ixx="1.9e-05" iyy="2.2e-05" izz="2e-05" ixy="-0.0" iyz="-0.0" ixz="-6e-06"/>
+  </inertial>
+  <visual>
+    <origin xyz="0.428 -0.466881 -0.0" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/right_motor_holder_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="0.428 -0.466881 -0.0" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/right_motor_holder_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="left_motor_holder_link_1">
+  <inertial>
+    <origin xyz="0.021620321801814647 0.014999794759327334 -0.010151847427416521" rpy="0 0 0"/>
+    <mass value="0.061662152889289286"/>
+    <inertia ixx="1.9e-05" iyy="2.2e-05" izz="2e-05" ixy="-0.0" iyz="0.0" ixz="6e-06"/>
+  </inertial>
+  <visual>
+    <origin xyz="-0.012091 -0.466881 0.0" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/left_motor_holder_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="-0.012091 -0.466881 0.0" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/left_motor_holder_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="clamp_link_1">
+  <inertial>
+    <origin xyz="-5.91613212697073e-07 0.015295447605025991 -0.038677831596409806" rpy="0 0 0"/>
+    <mass value="0.15417304639061474"/>
+    <inertia ixx="9.7e-05" iyy="6.7e-05" izz="7.4e-05" ixy="-0.0" iyz="2.7e-05" ixz="0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="0.208955 -0.762881 -0.9764" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/clamp_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="0.208955 -0.762881 -0.9764" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/clamp_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="ultrasonic_side_right_1">
+  <inertial>
+    <origin xyz="-0.4619481147559526 -0.4548811166729275 -0.47052897105527036" rpy="0 0 0"/>
+    <mass value="0.029441365273187678"/>
+    <inertia ixx="6e-06" iyy="1e-06" izz="5e-06" ixy="-0.0" iyz="-0.0" ixz="0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="-0.005 -1.060262 -0.5275" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/ultrasonic_side_right_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="-0.005 -1.060262 -0.5275" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/ultrasonic_side_right_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="right_panel_link_1">
+  <inertial>
+    <origin xyz="-0.002499691840567364 0.15049979475765696 -0.24849999999999522" rpy="0 0 0"/>
+    <mass value="5.871682249999999"/>
+    <inertia ixx="0.165195" iyy="0.120875" izz="0.044344" ixy="0.0" iyz="-0.0" ixz="0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="0.447955 -0.454881 -0.505" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/right_panel_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="0.447955 -0.454881 -0.505" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/right_panel_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="left_panel_link_1">
+  <inertial>
+    <origin xyz="0.002500308159438046 0.15299979475765835 -0.25000000000000533" rpy="0 0 0"/>
+    <mass value="6.00525"/>
+    <inertia ixx="0.171968" iyy="0.125122" izz="0.046871" ixy="0.0" iyz="0.0" ixz="-0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="-0.032045 -0.454881 -0.505" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/left_panel_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="-0.032045 -0.454881 -0.505" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/left_panel_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="center_panel_link_1">
+  <inertial>
+    <origin xyz="-0.21258413282495595 -0.3570372909095231 -0.19750000000000234" rpy="0 0 0"/>
+    <mass value="5.438200843483902"/>
+    <inertia ixx="0.03956" iyy="0.09541" izz="0.134946" ixy="0.000113" iyz="0.0" ixz="-0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="-0.004969 -0.962883 -0.55" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/center_panel_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="-0.004969 -0.962883 -0.55" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/center_panel_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="top_panel_link_1">
+  <inertial>
+    <origin xyz="-0.2125841328249572 -0.3570372909095235 -0.04750000000000476" rpy="0 0 0"/>
+    <mass value="5.438200843483868"/>
+    <inertia ixx="0.03956" iyy="0.09541" izz="0.134946" ixy="0.000113" iyz="0.0" ixz="0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="-0.004969 -0.962883 -0.55" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/top_panel_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="-0.004969 -0.962883 -0.55" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/top_panel_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="fork_top_slot_link_1">
+  <inertial>
+    <origin xyz="-0.23999969184053846 -0.017000205242341804 0.020000000000004126" rpy="0 0 0"/>
+    <mass value="0.701639023522382"/>
+    <inertia ixx="0.000207" iyy="0.013575" izz="0.013575" ixy="-0.0" iyz="0.0" ixz="0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="-0.031045 -0.759881 -0.945" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/fork_top_slot_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="-0.031045 -0.759881 -0.945" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/fork_top_slot_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="fork_rear_slot_right_link_1">
+  <inertial>
+    <origin xyz="0.0200003081594457 -0.017000205242341915 -0.4499999999999799" rpy="0 0 0"/>
+    <mass value="1.3155731691044652"/>
+    <inertia ixx="0.088995" iyy="0.088995" izz="0.000389" ixy="-0.0" iyz="0.0" ixz="-0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="0.448955 -0.759881 -0.945" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/fork_rear_slot_right_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="0.448955 -0.759881 -0.945" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/fork_rear_slot_right_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="ultrasonic_rear_left_1">
+  <inertial>
+    <origin xyz="0.4159543967288469 0.7718742176730428 -0.7357789710552692" rpy="0 0 0"/>
+    <mass value="0.029441365273187678"/>
+    <inertia ixx="1e-06" iyy="6e-06" izz="5e-06" ixy="0.0" iyz="-0.0" ixz="-0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="0.411909 -0.0 -0.8455" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/ultrasonic_rear_left_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="0.411909 -0.0 -0.8455" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/ultrasonic_rear_left_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="lead_screw_link_1">
+  <inertial>
+    <origin xyz="3.0815944851436683e-07 -2.0524230814888966e-07 -0.399999999999999" rpy="0 0 0"/>
+    <mass value="0.30518094202047674"/>
+    <inertia ixx="0.016277" iyy="0.016277" izz="2e-06" ixy="0.0" iyz="0.0" ixz="-0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="0.208955 -0.800881 -0.90442" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/lead_screw_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="0.208955 -0.800881 -0.90442" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/lead_screw_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="rear_panel_link_1">
+  <inertial>
+    <origin xyz="0.2400003081594368 0.0024997947576589352 0.23000000000001197" rpy="0 0 0"/>
+    <mass value="8.6664"/>
+    <inertia ixx="0.152836" iyy="0.319212" izz="0.166413" ixy="0.0" iyz="0.0" ixz="-0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="0.445955 -0.762881 -0.045" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/rear_panel_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="0.445955 -0.762881 -0.045" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/rear_panel_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="fork_bottom_slot_link_1">
+  <inertial>
+    <origin xyz="0.6847043081594261 0.7988807947576637 -0.7834999999999874" rpy="0 0 0"/>
+    <mass value="0.6979846536082016"/>
+    <inertia ixx="0.000206" iyy="0.013365" izz="0.013365" ixy="-0.0" iyz="0.0" ixz="0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="0.891909 -0.0 -0.8455" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/fork_bottom_slot_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="0.891909 -0.0 -0.8455" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/fork_bottom_slot_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="bottom_screw_holder_link_1">
+  <inertial>
+    <origin xyz="-0.2359496918396995 -0.7908812052423371 0.23813661026358368" rpy="0 0 0"/>
+    <mass value="0.014958632790476097"/>
+    <inertia ixx="2e-06" iyy="2e-06" izz="1e-06" ixy="0.0" iyz="0.0" ixz="0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="-0.027045 -1.591962 0.145205" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/bottom_screw_holder_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="-0.027045 -1.591962 0.145205" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/bottom_screw_holder_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="imu_link_1">
+  <inertial>
+    <origin xyz="0.0004657550144223921 -7.40369251310824e-05 0.0011352557386975493" rpy="0 0 0"/>
+    <mass value="0.0006377115631169521"/>
+    <inertia ixx="0.0" iyy="0.0" izz="0.0" ixy="0.0" iyz="0.0" ixz="-0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="0.207575 -0.606075 -0.355" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/imu_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="0.207575 -0.606075 -0.355" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/imu_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="ultrasonic_front_left_1">
+  <inertial>
+    <origin xyz="0.45920421959001656 -0.45087462815772605 -0.8285289710552801" rpy="0 0 0"/>
+    <mass value="0.029441365273187678"/>
+    <inertia ixx="1e-06" iyy="6e-06" izz="5e-06" ixy="0.0" iyz="0.0" ixz="0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="0.464909 -0.893762 -0.8585" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/ultrasonic_front_left_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="0.464909 -0.893762 -0.8585" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/ultrasonic_front_left_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="ultrasonic_front_right_1">
+  <inertial>
+    <origin xyz="0.534704219590018 -0.4508746281577264 -0.8285289710552699" rpy="0 0 0"/>
+    <mass value="0.029441365273187678"/>
+    <inertia ixx="1e-06" iyy="6e-06" izz="5e-06" ixy="0.0" iyz="0.0" ixz="0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="0.944909 -0.893762 -0.8585" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/ultrasonic_front_right_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="0.944909 -0.893762 -0.8585" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/ultrasonic_front_right_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="nema_link_1">
+  <inertial>
+    <origin xyz="3.7380730771863213e-07 -2.3129234075103255e-05 0.018208735116507002" rpy="0 0 0"/>
+    <mass value="0.20992974225387992"/>
+    <inertia ixx="8.2e-05" iyy="8.2e-05" izz="6.2e-05" ixy="-0.0" iyz="-0.0" ixz="-0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="0.208955 -0.800881 -0.9264" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/nema_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="0.208955 -0.800881 -0.9264" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/nema_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="coupling_link_1">
+  <inertial>
+    <origin xyz="3.409724729508401e-07 -2.052422373166607e-07 -0.012534238766664263" rpy="0 0 0"/>
+    <mass value="0.0351024483903194"/>
+    <inertia ixx="7e-06" iyy="7e-06" izz="1e-06" ixy="0.0" iyz="-0.0" ixz="0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="0.208955 -0.800881 -0.90442" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/coupling_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="0.208955 -0.800881 -0.90442" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/coupling_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="fork_holder_link_1">
+  <inertial>
+    <origin xyz="0.6508803081594807 0.07104349378215458 -1.6282084795268164" rpy="0 0 0"/>
+    <mass value="0.06369340089197861"/>
+    <inertia ixx="1.3e-05" iyy="1e-05" izz="1.3e-05" ixy="0.0" iyz="4e-06" ixz="-0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="0.859835 -0.741926 -1.76884" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/fork_holder_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="0.859835 -0.741926 -1.76884" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/fork_holder_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="ydliar_plate_link_1">
+  <inertial>
+    <origin xyz="0.4970374578504744 -0.4928381088428769 -0.7818801127483791" rpy="0 0 0"/>
+    <mass value="0.5401553750458953"/>
+    <inertia ixx="0.000574" iyy="0.000625" izz="0.001118" ixy="0.0" iyz="-5.4e-05" ixz="0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="0.704909 -0.893762 -0.8585" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/ydliar_plate_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="0.704909 -0.893762 -0.8585" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/ydliar_plate_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="lidar_link_1">
+  <inertial>
+    <origin xyz="-4.626931570661519e-07 -0.047533034442222344 0.01499999059121089" rpy="0 0 0"/>
+    <mass value="0.013063952294402428"/>
+    <inertia ixx="1.6e-05" iyy="4e-06" izz="1.8e-05" ixy="-0.0" iyz="-0.0" ixz="-0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="0.20837 -0.437217 -0.075" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/lidar_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="0.20837 -0.437217 -0.075" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find mybot_description)/meshes/lidar_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<joint name="Rigid_15" type="fixed">
+  <origin xyz="0.0345 0.015 -0.034" rpy="0 0 0"/>
+  <parent link="left_motor_holder_link_1"/>
+  <child link="left_motor_link_1"/>
+</joint>
+
+<joint name="Rigid_16" type="fixed">
+  <origin xyz="-0.0345 0.015 -0.034" rpy="0 0 0"/>
+  <parent link="right_motor_holder_link_1"/>
+  <child link="right_motor_link_1"/>
+</joint>
+
+<joint name="Rigid_17" type="continuous">
+  <origin xyz="0.033748 0.0 0.0" rpy="0 0 0"/>
+  <parent link="left_motor_link_1"/>
+  <child link="left_wheel_link_1"/>
+  <axis xyz="1 0 0"/>
+</joint>
+
+<joint name="Rigid_18" type="continuous">
+  <origin xyz="-0.034751 0.0 0.0" rpy="0 0 0"/>
+  <parent link="right_motor_link_1"/>
+  <child link="right_wheel_link_1"/>
+  <axis xyz="1 0 0"/>
+</joint>
+
+<joint name="Rigid_42" type="fixed">
+  <origin xyz="0.65088 0.058955 -1.62442" rpy="0 0 0"/>
+  <parent link="fork_holder_link_1"/>
+  <child link="fork_coupling_link_1"/>
+</joint>
+
+<joint name="Rigid_44" type="fixed">
+  <origin xyz="0.65088 0.082495 -1.63592" rpy="0 0 0"/>
+  <parent link="fork_holder_link_1"/>
+  <child link="fork_center_slot_1"/>
+</joint>
+
+<joint name="Rigid_47" type="fixed">
+  <origin xyz="0.0 0.04 -0.15" rpy="0 0 0"/>
+  <parent link="fork_left_h_slot_1"/>
+  <child link="fork_left_link_1"/>
+</joint>
+
+<joint name="Rigid_48" type="fixed">
+  <origin xyz="0.0 0.04 -0.15" rpy="0 0 0"/>
+  <parent link="fork_right_h_slot_1"/>
+  <child link="fork_right_link_1"/>
+</joint>
+
+<joint name="Rigid_58" type="fixed">
+  <origin xyz="0.003 0.45 -0.037" rpy="0 0 0"/>
+  <parent link="left_bottom_slot_link_1"/>
+  <child link="left_caster_link_1"/>
+</joint>
+
+<joint name="Rigid_59" type="fixed">
+  <origin xyz="-0.003 0.45 -0.037" rpy="0 0 0"/>
+  <parent link="right_bottom_slot_link_1"/>
+  <child link="right_caster_link_1"/>
+</joint>
+
+<joint name="Rigid_60" type="fixed">
+  <origin xyz="0.135 0.04 0.0056" rpy="0 0 0"/>
+  <parent link="fork_center_slot_1"/>
+  <child link="fork_left_h_slot_1"/>
+</joint>
+
+<joint name="Rigid_61" type="fixed">
+  <origin xyz="-0.135 0.04 0.0056" rpy="0 0 0"/>
+  <parent link="fork_center_slot_1"/>
+  <child link="fork_right_h_slot_1"/>
+</joint>
+
+<joint name="Rigid_62" type="fixed">
+  <origin xyz="-0.207955 0.454881 0.005" rpy="0 0 0"/>
+  <parent link="base_link"/>
+  <child link="front_bottom_slot_link_1"/>
+</joint>
+
+<joint name="Rigid_65" type="fixed">
+  <origin xyz="-0.037 0.0 0.003" rpy="0 0 0"/>
+  <parent link="right_bottom_slot_link_1"/>
+  <child link="fork_front_slot_right_link_1"/>
+</joint>
+
+<joint name="Rigid_66" type="fixed">
+  <origin xyz="0.037 0.0 0.003" rpy="0 0 0"/>
+  <parent link="left_bottom_slot_link_1"/>
+  <child link="fork_front_slot_left_link_1"/>
+</joint>
+
+<joint name="Rigid_67" type="fixed">
+  <origin xyz="-0.207955 0.76 0.005" rpy="0 0 0"/>
+  <parent link="base_link"/>
+  <child link="rear_bottom_slot_link_1"/>
+</joint>
+
+<joint name="Rigid_68" type="fixed">
+  <origin xyz="0.015046 0.045 -0.693881" rpy="0 0 0"/>
+  <parent link="left_bottom_slot_link_1"/>
+  <child link="fork_rear_slot_left_link_1"/>
+</joint>
+
+<joint name="Rigid_76" type="fixed">
+  <origin xyz="0.0 -0.003 0.003" rpy="0 0 0"/>
+  <parent link="front_bottom_slot_link_1"/>
+  <child link="front_panel_link_1"/>
+</joint>
+
+<joint name="Rigid_88" type="fixed">
+  <origin xyz="0.037046 0.612881 0.0325" rpy="0 0 0"/>
+  <parent link="left_panel_link_1"/>
+  <child link="ultrasonic_side_left_1"/>
+</joint>
+
+<joint name="Rigid_89" type="fixed">
+  <origin xyz="-0.445954 -0.762881 0.8005" rpy="0 0 0"/>
+  <parent link="rear_panel_link_1"/>
+  <child link="ultrasonic_rear_right_1"/>
+</joint>
+
+<joint name="Rigid_92" type="fixed">
+  <origin xyz="0.684704 0.818881 -0.7949" rpy="0 0 0"/>
+  <parent link="fork_bottom_slot_link_1"/>
+  <child link="Webcam_1"/>
+</joint>
+
+<joint name="Rigid_93" type="fixed">
+  <origin xyz="-0.2 -0.003 0.037" rpy="0 0 0"/>
+  <parent link="front_bottom_slot_link_1"/>
+  <child link="right_bottom_slot_link_1"/>
+</joint>
+
+<joint name="Rigid_94" type="fixed">
+  <origin xyz="0.2 -0.003 0.037" rpy="0 0 0"/>
+  <parent link="front_bottom_slot_link_1"/>
+  <child link="left_bottom_slot_link_1"/>
+</joint>
+
+<joint name="Rigid_95" type="fixed">
+  <origin xyz="-0.428 0.466881 0.0" rpy="0 0 0"/>
+  <parent link="base_link"/>
+  <child link="right_motor_holder_link_1"/>
+</joint>
+
+<joint name="Rigid_96" type="fixed">
+  <origin xyz="0.012091 0.466881 0.0" rpy="0 0 0"/>
+  <parent link="base_link"/>
+  <child link="left_motor_holder_link_1"/>
+</joint>
+
+<joint name="Rigid_110" type="fixed">
+  <origin xyz="-0.24 0.003 0.0314" rpy="0 0 0"/>
+  <parent link="fork_top_slot_link_1"/>
+  <child link="clamp_link_1"/>
+</joint>
+
+<joint name="Rigid_111" type="fixed">
+  <origin xyz="0.452955 0.605381 0.0225" rpy="0 0 0"/>
+  <parent link="right_panel_link_1"/>
+  <child link="ultrasonic_side_right_1"/>
+</joint>
+
+<joint name="Rigid_112" type="fixed">
+  <origin xyz="-0.003 0.003 0.46" rpy="0 0 0"/>
+  <parent link="fork_front_slot_right_link_1"/>
+  <child link="right_panel_link_1"/>
+</joint>
+
+<joint name="Rigid_113" type="fixed">
+  <origin xyz="0.003 0.003 0.46" rpy="0 0 0"/>
+  <parent link="fork_front_slot_left_link_1"/>
+  <child link="left_panel_link_1"/>
+</joint>
+
+<joint name="Rigid_114" type="fixed">
+  <origin xyz="-0.024076 0.511002 0.505" rpy="0 0 0"/>
+  <parent link="fork_front_slot_left_link_1"/>
+  <child link="center_panel_link_1"/>
+</joint>
+
+<joint name="Rigid_115" type="fixed">
+  <origin xyz="-0.024076 0.511002 0.505" rpy="0 0 0"/>
+  <parent link="fork_front_slot_left_link_1"/>
+  <child link="top_panel_link_1"/>
+</joint>
+
+<joint name="Rigid_116" type="fixed">
+  <origin xyz="0.023954 0.263 1.596881" rpy="0 0 0"/>
+  <parent link="fork_rear_slot_left_link_1"/>
+  <child link="fork_top_slot_link_1"/>
+</joint>
+
+<joint name="Rigid_117" type="fixed">
+  <origin xyz="-0.48 0.0 0.0" rpy="0 0 0"/>
+  <parent link="fork_top_slot_link_1"/>
+  <child link="fork_rear_slot_right_link_1"/>
+</joint>
+
+<joint name="Rigid_118" type="fixed">
+  <origin xyz="0.034046 -0.762881 0.8005" rpy="0 0 0"/>
+  <parent link="rear_panel_link_1"/>
+  <child link="ultrasonic_rear_left_1"/>
+</joint>
+
+<joint name="Rigid_119" type="fixed">
+  <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+  <parent link="coupling_link_1"/>
+  <child link="lead_screw_link_1"/>
+</joint>
+
+<joint name="Rigid_120" type="fixed">
+  <origin xyz="0.003 0.003 -0.9" rpy="0 0 0"/>
+  <parent link="fork_rear_slot_right_link_1"/>
+  <child link="rear_panel_link_1"/>
+</joint>
+
+<joint name="Rigid_121" type="fixed">
+  <origin xyz="-0.445954 -0.762881 0.8005" rpy="0 0 0"/>
+  <parent link="rear_panel_link_1"/>
+  <child link="fork_bottom_slot_link_1"/>
+</joint>
+
+<joint name="Rigid_122" type="fixed">
+  <origin xyz="0.918954 1.591962 -0.990705" rpy="0 0 0"/>
+  <parent link="fork_bottom_slot_link_1"/>
+  <child link="bottom_screw_holder_link_1"/>
+</joint>
+
+<joint name="Rigid_123" type="fixed">
+  <origin xyz="-0.212544 -0.356808 -0.195" rpy="0 0 0"/>
+  <parent link="center_panel_link_1"/>
+  <child link="imu_link_1"/>
+</joint>
+
+<joint name="Rigid_124" type="fixed">
+  <origin xyz="-0.256954 0.441881 0.8505" rpy="0 0 0"/>
+  <parent link="front_panel_link_1"/>
+  <child link="ultrasonic_front_left_1"/>
+</joint>
+
+<joint name="Rigid_125" type="fixed">
+  <origin xyz="-0.736954 0.441881 0.8505" rpy="0 0 0"/>
+  <parent link="front_panel_link_1"/>
+  <child link="ultrasonic_front_right_1"/>
+</joint>
+
+<joint name="Rigid_126" type="fixed">
+  <origin xyz="0.0 0.038 -0.05" rpy="0 0 0"/>
+  <parent link="clamp_link_1"/>
+  <child link="nema_link_1"/>
+</joint>
+
+<joint name="Rigid_127" type="fixed">
+  <origin xyz="0.0 0.0 -0.02198" rpy="0 0 0"/>
+  <parent link="nema_link_1"/>
+  <child link="coupling_link_1"/>
+</joint>
+
+<joint name="Slider_128" type="prismatic">
+  <origin xyz="-0.65088 -0.058955 0.86442" rpy="0 0 0"/>
+  <parent link="coupling_link_1"/>
+  <child link="fork_holder_link_1"/>
+  <axis xyz="-0.0 0.0 -1.0"/>
+  <limit upper="0.72" lower="0.02" effort="500" velocity="0.2"/>
+  <dynamics damping="200" friction="50"/>
+</joint>
+
+<joint name="Rigid_129" type="fixed">
+  <origin xyz="-0.496954 0.441881 0.8505" rpy="0 0 0"/>
+  <parent link="front_panel_link_1"/>
+  <child link="ydliar_plate_link_1"/>
+</joint>
+
+<joint name="Rigid_130" type="fixed">
+  <origin xyz="0.496539 -0.456545 -0.7835" rpy="0 0 0"/>
+  <parent link="ydliar_plate_link_1"/>
+  <child link="lidar_link_1"/>
+</joint>
+
+
+<link name="base_footprint">
+  <inertial>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <mass value="0.01"/>
+    <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6"/>
+  </inertial>
+</link>
+
+<!-- base_footprint sits on the midpoint of the drive-wheel axle (needed for correct diff-drive odom) -->
+<joint name="base_footprint_joint" type="fixed">
+  <parent link="base_footprint"/>
+  <child link="base_link"/>
+  <origin xyz="0.481880 0.208458 0.087" rpy="0 0 1.5708"/>
+</joint>
+
+<link name="battery_link">
+  <inertial>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <mass value="200.0"/>
+    <inertia ixx="1.2817" ixy="0" ixz="0" iyy="1.7400" iyz="0" izz="2.5417"/>
+  </inertial>
+</link>
+
+<joint name="battery_joint" type="fixed">
+  <parent link="base_footprint"/>
+  <child link="battery_link"/>
+  <origin xyz="-0.1231 0.0005 0.183" rpy="0 0 0"/>
+</joint>
+
+<link name="laser_link">
+  <inertial>
+    <mass value="0.001"/>
+    <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6"/>
+  </inertial>
+</link>
+
+<joint name="laser_joint" type="fixed">
+  <parent link="lidar_link_1"/>
+  <child link="laser_link"/>
+  <origin xyz="-0.000000 -0.047533 0.015000" rpy="0 0 1.570796"/>
+</joint>
+
+<link name="imu_link">
+  <inertial>
+    <mass value="0.001"/>
+    <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6"/>
+  </inertial>
+</link>
+
+<joint name="imu_joint" type="fixed">
+  <parent link="imu_link_1"/>
+  <child link="imu_link"/>
+  <origin xyz="0 0 0" rpy="0 0 -1.570796"/>
+</joint>
+
+<!-- ===== ros2_control (replaces the old libgazebo_ros_diff_drive plugin) ===== -->
+<ros2_control name="GazeboSystem" type="system">
+  <hardware>
+    <plugin>gazebo_ros2_control/GazeboSystem</plugin>
+  </hardware>
+  <joint name="Rigid_17">
+    <command_interface name="velocity">
+      <param name="min">-10</param>
+      <param name="max">10</param>
+    </command_interface>
+    <state_interface name="position"/>
+    <state_interface name="velocity"/>
+  </joint>
+  <joint name="Rigid_18">
+    <command_interface name="velocity">
+      <param name="min">-10</param>
+      <param name="max">10</param>
+    </command_interface>
+    <state_interface name="position"/>
+    <state_interface name="velocity"/>
+  </joint>
+  <joint name="Slider_128">
+    <command_interface name="position"/>
+    <state_interface name="position">
+      <param name="initial_value">0.02</param>
+    </state_interface>
+    <state_interface name="velocity"/>
+  </joint>
+</ros2_control>
+
+<gazebo>
+  <plugin name="gazebo_ros2_control" filename="libgazebo_ros2_control.so">
+    <robot_param>robot_description</robot_param>
+    <robot_param_node>robot_state_publisher</robot_param_node>
+    <parameters>$(find mybot_gazebo)/config/fork_controllers.yaml</parameters>
+    <ros>
+      <remapping>diff_drive_controller/odom:=/odom</remapping>
+      <remapping>diff_drive_controller/cmd_vel_unstamped:=/cmd_vel</remapping>
+    </ros>
+  </plugin>
+</gazebo>
+
+<gazebo reference="base_link">
+  <material>Gazebo/Grey</material>
+  <self_collide>false</self_collide>
+</gazebo>
+
+<gazebo reference="left_wheel_link_1">
+  <material>Gazebo/Black</material>
+  <mu1>1.2</mu1>
+  <mu2>1.2</mu2>
+  <kp>1000000.0</kp>
+  <kd>100.0</kd>
+  <minDepth>0.001</minDepth>
+  <maxVel>1.0</maxVel>
+</gazebo>
+
+<gazebo reference="right_wheel_link_1">
+  <material>Gazebo/Black</material>
+  <mu1>1.2</mu1>
+  <mu2>1.2</mu2>
+  <kp>1000000.0</kp>
+  <kd>100.0</kd>
+  <minDepth>0.001</minDepth>
+  <maxVel>1.0</maxVel>
+</gazebo>
+
+<gazebo reference="left_caster_link_1">
+  <mu1>0.05</mu1>
+  <mu2>0.05</mu2>
+  <kp>1000000.0</kp>
+  <kd>10.0</kd>
+  <minDepth>0.001</minDepth>
+  <maxVel>1.0</maxVel>
+</gazebo>
+
+<gazebo reference="right_caster_link_1">
+  <mu1>0.05</mu1>
+  <mu2>0.05</mu2>
+  <kp>1000000.0</kp>
+  <kd>10.0</kd>
+  <minDepth>0.001</minDepth>
+  <maxVel>1.0</maxVel>
+</gazebo>
+
+<!-- ===== 2D lidar -> /scan (sensor_msgs/LaserScan) ===== -->
+<gazebo reference="laser_link">
+  <sensor name="lidar_sensor" type="ray">
+    <always_on>true</always_on>
+    <visualize>true</visualize>
+    <update_rate>30</update_rate>
+    <ray>
+      <scan>
+        <horizontal>
+          <samples>180</samples>
+          <resolution>1</resolution>
+          <min_angle>1.5708</min_angle>
+          <max_angle>4.7124</max_angle>
+        </horizontal>
+      </scan>
+      <range>
+        <min>0.12</min>
+        <max>10.0</max>
+        <resolution>0.01</resolution>
+      </range>
+      <noise>
+        <type>gaussian</type>
+        <mean>0.0</mean>
+        <stddev>0.01</stddev>
+      </noise>
+    </ray>
+    <plugin name="laser_plugin" filename="libgazebo_ros_ray_sensor.so">
+      <ros>
+        <remapping>~/out:=/scan</remapping>
+      </ros>
+      <frame_name>laser_link</frame_name>
+      <output_type>sensor_msgs/LaserScan</output_type>
+    </plugin>
+  </sensor>
+</gazebo>
+
+<!-- ===== IMU -> /imu ===== -->
+<gazebo reference="imu_link">
+  <sensor name="imu_sensor" type="imu">
+    <always_on>true</always_on>
+    <update_rate>100</update_rate>
+    <visualize>false</visualize>
+    <imu>
+      <angular_velocity>
+        <x><noise type="gaussian"><mean>0.0</mean><stddev>0.0002</stddev></noise></x>
+        <y><noise type="gaussian"><mean>0.0</mean><stddev>0.0002</stddev></noise></y>
+        <z><noise type="gaussian"><mean>0.0</mean><stddev>0.0002</stddev></noise></z>
+      </angular_velocity>
+      <linear_acceleration>
+        <x><noise type="gaussian"><mean>0.0</mean><stddev>0.017</stddev></noise></x>
+        <y><noise type="gaussian"><mean>0.0</mean><stddev>0.017</stddev></noise></y>
+        <z><noise type="gaussian"><mean>0.0</mean><stddev>0.017</stddev></noise></z>
+      </linear_acceleration>
+    </imu>
+    <plugin name="imu_plugin" filename="libgazebo_ros_imu_sensor.so">
+      <ros>
+        <namespace>/</namespace>
+        <remapping>~/out:=imu</remapping>
+      </ros>
+      <frame_name>imu_link</frame_name>
+      <initial_orientation_as_reference>false</initial_orientation_as_reference>
+    </plugin>
+  </sensor>
+</gazebo>
+
+<!-- ===== Ultrasonic range sensors (Gazebo ray sensor -> sensor_msgs/Range) =====
+     Sensor frame = centre (COM) of the matching *_1 mesh link, facing outward.
+     yaw is relative to the link frame (= base_link, which is base_footprint yawed +90 deg),
+     so yaw_link = yaw_in_footprint - 1.570796. -->
+<xacro:macro name="ultrasonic_sensor" params="name parent xyz yaw">
+  <link name="${name}_sensor_link">
+    <inertial>
+      <mass value="0.001"/>
+      <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6"/>
+    </inertial>
+  </link>
+  <joint name="${name}_sensor_joint" type="fixed">
+    <parent link="${parent}"/>
+    <child link="${name}_sensor_link"/>
+    <origin xyz="${xyz}" rpy="0 0 ${yaw}"/>
+  </joint>
+  <gazebo reference="${name}_sensor_link">
+    <sensor name="${name}_sensor" type="ray">
+      <always_on>true</always_on>
+      <visualize>false</visualize>
+      <update_rate>10</update_rate>
+      <ray>
+        <scan>
+          <horizontal>
+            <samples>5</samples>
+            <resolution>1</resolution>
+            <min_angle>-0.13</min_angle>
+            <max_angle>0.13</max_angle>
+          </horizontal>
+          <vertical>
+            <samples>1</samples>
+            <resolution>1</resolution>
+            <min_angle>0.0</min_angle>
+            <max_angle>0.0</max_angle>
+          </vertical>
+        </scan>
+        <range>
+          <min>0.05</min>
+          <max>4.0</max>
+          <resolution>0.01</resolution>
+        </range>
+        <noise>
+          <type>gaussian</type>
+          <mean>0.0</mean>
+          <stddev>0.005</stddev>
+        </noise>
+      </ray>
+      <plugin name="${name}_plugin" filename="libgazebo_ros_ray_sensor.so">
+        <ros>
+          <remapping>~/out:=/${name}</remapping>
+        </ros>
+        <output_type>sensor_msgs/Range</output_type>
+        <radiation_type>ultrasound</radiation_type>
+        <frame_name>${name}_sensor_link</frame_name>
+      </plugin>
+    </sensor>
+  </gazebo>
+</xacro:macro>
+
+<xacro:ultrasonic_sensor name="ultrasonic_front_left" parent="ultrasonic_front_left_1" xyz="0.459204 -0.450875 -0.828529" yaw="-1.570796"/>
+<xacro:ultrasonic_sensor name="ultrasonic_front_right" parent="ultrasonic_front_right_1" xyz="0.534704 -0.450875 -0.828529" yaw="-1.570796"/>
+<xacro:ultrasonic_sensor name="ultrasonic_rear_left" parent="ultrasonic_rear_left_1" xyz="0.415954 0.771874 -0.735779" yaw="1.570796"/>
+<xacro:ultrasonic_sensor name="ultrasonic_rear_right" parent="ultrasonic_rear_right_1" xyz="0.475954 0.771874 -0.735779" yaw="1.570796"/>
+<xacro:ultrasonic_sensor name="ultrasonic_side_left" parent="ultrasonic_side_left_1" xyz="-0.028052 -0.459881 -0.482779" yaw="0.000000"/>
+<xacro:ultrasonic_sensor name="ultrasonic_side_right" parent="ultrasonic_side_right_1" xyz="-0.461948 -0.454881 -0.470529" yaw="-3.141593"/>
+
+</robot>
