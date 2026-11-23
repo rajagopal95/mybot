@@ -202,9 +202,13 @@ The full workflow revolves around four scripts: `verify.sh`, `mapping.sh`, `star
 
 ## 1. Verify your setup
 
-Before your first run, confirm dependencies and the workspace are ready:
+Before your first run, confirm dependencies and the workspace are ready. After building the workspace, source the environment and enter the repository directory before running the scripts:
 
 ```bash
+cd ~/mybot_ws
+source install/setup.bash
+cd ~/mybot_ws/src/mybot
+
 bash verify.sh
 ```
 
@@ -213,7 +217,6 @@ It checks the ROS 2 Humble environment, required and forklift packages, Gazebo, 
 ## 2. Mapping — `mapping.sh`
 
 ```bash
-bash mapping.sh             # mybot (default)
 bash mapping.sh forklift    # forklift AMR
 ```
 
@@ -249,21 +252,27 @@ ros2 run mybot_slam save_map.py
 
 ```text
 Enter map name:
-hospital
+warehouse
 ```
 
 Saved to `mybot_slam/maps/hospital.pgm` and `hospital.yaml`.
 
 ## 3. Navigation — `start.sh`
 
+Select the robot model and saved map when starting navigation:
+
 ```bash
-bash start.sh               # mybot (default)
-bash start.sh forklift      # forklift AMR
+bash start.sh forklift warehouse
 ```
 
-Launches Gazebo, robot_state_publisher, localization, Nav2, and RViz using the saved map. Like `mapping.sh`, `start.sh` uses the **mybot** URDF by default; pass `forklift` to navigate with the forklift URDF.
+The command arguments are:
 
-Use a map made with the same world and robot you navigate with. For example, map the warehouse with `bash mapping.sh forklift` before running `bash start.sh forklift` there.
+- `forklift` — selects the forklift AMR model.
+- `warehouse` — selects the saved warehouse map (`warehouse.yaml` and `warehouse.pgm`).
+
+For the standard MyBot in the hospital environment, use `bash start.sh mybot hospital`.
+
+Launches Gazebo, robot_state_publisher, localization, Nav2, and RViz using the selected robot model and saved map. Use a map made with the same world and robot you navigate with. For example, map the warehouse with `bash mapping.sh forklift`, save it as `warehouse`, and then run `bash start.sh forklift warehouse`.
 
 **In RViz:**
 1. Click **2D Pose Estimate** → click + drag on the robot's actual position/heading.
@@ -287,37 +296,41 @@ Terminates all ROS2, Gazebo, and related processes. Run this between runs (e.g. 
 
 ## Typical Session Example
 
+Run these commands from `~/mybot_ws/src/mybot` after sourcing `~/mybot_ws/install/setup.bash` as shown in the Quick Start Tutorial.
+
 ```bash
-# Terminal 1
-cd ~/mybot_ws && source install/setup.bash
+# Terminal 1 — MyBot hospital workflow
 bash verify.sh                 # sanity check
 
 bash mapping.sh                # mybot: choose 1 / 2
 # ... drive robot around, then Ctrl+C when mapping done ...
-python3 src/mybot/mybot_slam/scripts/save_map.py
+ros2 run mybot_slam save_map.py
+# Enter map name: hospital
 
-sudo sh kill.sh                   # clean up before switching modes
+bash kill.sh                   # clean up before navigation
 
-bash start.sh                  # launch navigation with saved map
+bash start.sh mybot hospital  # navigation with the hospital map
 # In RViz: 2D Pose Estimate -> Nav2 Goal
 # If localization fails, run in another terminal: bash debug_amcl.sh
 
-sudo sh kill.sh                   # clean up when finished
+bash kill.sh                   # clean up when finished
 ```
 
 ### Forklift variant
 
 ```bash
+# Forklift warehouse workflow
 bash mapping.sh forklift       # forklift URDF: choose 1 / 2
 # ... drive robot around, then Ctrl+C when mapping done ...
-python3 src/mybot/mybot_slam/scripts/save_map.py
+ros2 run mybot_slam save_map.py
+# Enter map name: warehouse
 
-sudo sh kill.sh
+bash kill.sh
 
-bash start.sh forklift         # navigation with the forklift URDF
+bash start.sh forklift warehouse  # navigation with the forklift and warehouse map
 # In RViz: 2D Pose Estimate -> Nav2 Goal
 
-sudo sh kill.sh
+bash kill.sh
 ```
 
 ---
@@ -327,7 +340,7 @@ sudo sh kill.sh
 There are two ways to run the forklift:
 
 - `fork_gazebo.launch.py` — simulation and teleop only (described below).
-- `bash mapping.sh forklift` / `bash start.sh forklift` — the full SLAM and Nav2 workflows with the forklift URDF.
+- `bash mapping.sh forklift` / `bash start.sh forklift warehouse` — the full SLAM and Nav2 workflows with the forklift URDF and selected warehouse map.
 
 The forklift AMR has its own Gazebo launch file, `fork_gazebo.launch.py`. It starts Gazebo with the chosen world, publishes the robot description, spawns the robot as `fork_robot`, starts the `/scan` laser filter, and spawns `joint_state_broadcaster` and `diff_drive_controller` after a short delay.
 
@@ -522,7 +535,7 @@ Map Saved (.pgm + .yaml)
 Run kill.sh
        │
        ▼
-Run start.sh  (add `forklift` for the forklift URDF)
+Run start.sh <robot_type> <map_name>
        │
        ▼
 Open RViz
@@ -623,7 +636,7 @@ ros2 run tf2_tools view_frames
 |---|---|
 | `verify.sh` | Verifies the ROS 2 environment, required packages, built workspace, scripts, and saved maps |
 | `mapping.sh [forklift]` | Launches mapping workflow with SLAM backend selection menu; uses the mybot URDF, or the forklift URDF when `forklift` is passed |
-| `start.sh [forklift]` | Starts navigation stack using the saved map; uses the mybot URDF, or the forklift URDF when `forklift` is passed |
+| `start.sh <robot_type> <map_name>` | Starts navigation using the selected robot model and saved map, e.g. `bash start.sh forklift warehouse` |
 | `debug_amcl.sh` | AMCL localization debugging: node lifecycle state, initial pose publish, `/amcl_pose`, and `map → odom` TF checks |
 | `kill.sh` | Terminates all running ROS2, Gazebo, and related processes |
 | `save_map.py` | Interactive script to save the current map (prompts for name) |
@@ -636,7 +649,8 @@ Generated maps:
 
 ```text
 mybot_slam/maps/
-└── hospital.yaml / .pgm
+├── hospital.yaml / .pgm
+└── warehouse.yaml / .pgm
 ```
 
 New maps are saved here by `save_map.py` (for example `warehouse.yaml` / `.pgm` after mapping the warehouse world). A keepout mask, if used, is a separate image and yaml saved alongside the map.
