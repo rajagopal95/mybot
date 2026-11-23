@@ -307,13 +307,12 @@ bash mapping.sh                # mybot: choose 1 / 2
 ros2 run mybot_slam save_map.py
 # Enter map name: hospital
 
-bash kill.sh                   # clean up before navigation
+sudo sh kill.sh                   # clean up before navigation
 
-bash start.sh mybot hospital  # navigation with the hospital map
 # In RViz: 2D Pose Estimate -> Nav2 Goal
 # If localization fails, run in another terminal: bash debug_amcl.sh
 
-bash kill.sh                   # clean up when finished
+sudo sh kill.sh               # clean up when finished
 ```
 
 ### Forklift variant
