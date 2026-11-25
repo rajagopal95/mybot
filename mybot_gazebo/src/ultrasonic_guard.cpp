@@ -18,11 +18,11 @@ public:
   {
     declare_parameter<std::string>("input_topic", "/cmd_vel_raw");
     declare_parameter<std::string>("output_topic", "/cmd_vel");
-    declare_parameter<double>("front_stop", 0.25);
-    declare_parameter<double>("front_slow", 0.60);
-    declare_parameter<double>("rear_stop", 0.30);
-    declare_parameter<double>("rear_slow", 0.70);
-    declare_parameter<double>("side_stop", 0.05);
+    declare_parameter<double>("front_stop", 0.02);
+    declare_parameter<double>("front_slow", 0.04);
+    declare_parameter<double>("rear_stop", 0.02);
+    declare_parameter<double>("rear_slow", 0.04);
+    declare_parameter<double>("side_stop", 0.04);
     declare_parameter<double>("stale_after", 0.5);
     declare_parameter<bool>("stop_on_stale", false);
 

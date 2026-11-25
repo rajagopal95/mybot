@@ -1,0 +1,29 @@
+<!--
+  Plan ONCE → follow that green path to the end (no SimpleSmoother:
+  it turned Hybrid-A* Dubins end-hooks into big circles).
+  No RateController / IsPathValid (those were replanning off the green line).
+  Recovery only on failure: clear costmaps, wait, backup. No Spin.
+-->
+<root main_tree_to_execute="MainTree">
+  <BehaviorTree ID="MainTree">
+    <RecoveryNode number_of_retries="6" name="NavigateRecovery">
+      <Sequence name="NavigateOnceAlongGreenPath">
+        <ComputePathToPose goal="{goal}" path="{path}" planner_id="GridBased"/>
+        <FollowPath path="{path}" controller_id="FollowPath" goal_checker_id="general_goal_checker"/>
+      </Sequence>
+      <ReactiveFallback name="RecoveryFallback">
+        <GoalUpdated/>
+        <RoundRobin name="RecoveryActions">
+          <Sequence name="ClearingActions">
+            <ClearEntireCostmap name="ClearLocalCostmap-Subtree"
+              service_name="local_costmap/clear_entirely_local_costmap"/>
+            <ClearEntireCostmap name="ClearGlobalCostmap-Subtree"
+              service_name="global_costmap/clear_entirely_global_costmap"/>
+          </Sequence>
+          <Wait wait_duration="2"/>
+          <BackUp backup_dist="0.20" backup_speed="0.12"/>
+        </RoundRobin>
+      </ReactiveFallback>
+    </RecoveryNode>
+  </BehaviorTree>
+</root>

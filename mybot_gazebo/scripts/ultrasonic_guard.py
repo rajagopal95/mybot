@@ -44,11 +44,12 @@ class UltrasonicGuard(Node):
         defaults = {
             'input_topic': '/cmd_vel_raw',
             'output_topic': '/cmd_vel',
-            'front_stop': 0.25,
-            'front_slow': 0.60,
-            'rear_stop': 0.30,
-            'rear_slow': 0.70,
-            'side_stop': 0.05,
+            # Sensors max_range is 4 cm; stop/slow within that near-field only.
+            'front_stop': 0.02,
+            'front_slow': 0.04,
+            'rear_stop': 0.02,
+            'rear_slow': 0.04,
+            'side_stop': 0.04,
             'stale_after': 0.5,
             'stop_on_stale': False,
         }

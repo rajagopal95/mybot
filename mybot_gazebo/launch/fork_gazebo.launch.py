@@ -208,10 +208,17 @@ def generate_launch_description():
         ],
     )
 
-    # Ultrasonic safety guard. The ultrasonic_guard executable must be
-    # installed by the mybot_gazebo package (see setup.py/CMake install rules).
-    # Nav2 publishes to /cmd_vel_raw; the guard limits velocity and publishes
-    # the result to /cmd_vel for the drive controller.
+    # Rewrite Gazebo FLT_MAX clears to +Inf so Nav2 RangeSensorLayer accepts them.
+    ultrasonic_range_fixer = Node(
+        package="mybot_gazebo",
+        executable="ultrasonic_range_fixer",
+        name="ultrasonic_range_fixer",
+        output="screen",
+        parameters=[{"use_sim_time": True}],
+    )
+
+    # Nav2 velocity_smoother publishes /cmd_vel. Guard republishes to
+    # /cmd_vel_safe; remapping below makes the diff-drive use that topic.
     ultrasonic_guard = Node(
         package="mybot_gazebo",
         executable="ultrasonic_guard",
@@ -219,16 +226,14 @@ def generate_launch_description():
         output="screen",
         parameters=[{
             "use_sim_time": True,
-            "input_topic": "/cmd_vel_raw",
-            "output_topic": "/cmd_vel",
-            "front_stop": 0.25,
-            "front_slow": 0.60,
-            "rear_stop": 0.30,
-            "rear_slow": 0.70,
-            "side_stop": 0.05,
+            "input_topic": "/cmd_vel",
+            "output_topic": "/cmd_vel_safe",
+            "front_stop": 0.02,
+            "front_slow": 0.04,
+            "rear_stop": 0.02,
+            "rear_slow": 0.04,
+            "side_stop": 0.04,
             "stale_after": 0.5,
-            # False is convenient in simulation if sensor topics start late.
-            # Set true on hardware to stop when sensor data becomes stale.
             "stop_on_stale": False,
         }],
     )
@@ -265,5 +270,6 @@ def generate_launch_description():
         spawn_diff_drive,
         spawn_fork_controller,
         scan_filter,
+        ultrasonic_range_fixer,
         ultrasonic_guard,
     ])

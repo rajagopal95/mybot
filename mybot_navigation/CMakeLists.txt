@@ -26,7 +26,13 @@ install(DIRECTORY
   launch
   config
   rviz
+  behavior_trees
   DESTINATION share/${PROJECT_NAME}
+)
+
+install(PROGRAMS
+  scripts/publish_initial_pose.py
+  DESTINATION lib/${PROJECT_NAME}
 )
 
 ament_package()

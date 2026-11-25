@@ -21,13 +21,15 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 endif()
 
-# A native subscriber is required because several Gazebo Range topics cannot
-# be deserialized by rclpy in this simulation.  The local costmap already
-# proves the native ROS 2 subscription path is valid for those messages.
+# Native C++ nodes: rclpy cannot deserialize Gazebo Range messages that carry
+# FLT_MAX (Python bindings reject it). C++ accepts them and we rewrite to +Inf.
 add_executable(ultrasonic_guard src/ultrasonic_guard.cpp)
 ament_target_dependencies(ultrasonic_guard rclcpp geometry_msgs sensor_msgs)
 
-install(TARGETS ultrasonic_guard
+add_executable(ultrasonic_range_fixer src/ultrasonic_range_fixer.cpp)
+ament_target_dependencies(ultrasonic_range_fixer rclcpp sensor_msgs)
+
+install(TARGETS ultrasonic_guard ultrasonic_range_fixer
   DESTINATION lib/${PROJECT_NAME})
 
 install(DIRECTORY launch worlds config models
