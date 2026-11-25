@@ -14,6 +14,10 @@ def generate_launch_description():
     map_yaml = LaunchConfiguration('map')
     params_file = LaunchConfiguration('params_file')
     use_sim_time = LaunchConfiguration('use_sim_time', default='true')
+    publish_initial_pose = LaunchConfiguration('publish_initial_pose')
+    initial_pose_x = LaunchConfiguration('initial_pose_x')
+    initial_pose_y = LaunchConfiguration('initial_pose_y')
+    initial_pose_yaw = LaunchConfiguration('initial_pose_yaw')
 
     declare_map = DeclareLaunchArgument(
         'map', default_value=os.path.join(slam_dir, 'maps', 'hospital.yaml'))
@@ -21,6 +25,20 @@ def generate_launch_description():
         'params_file', default_value=os.path.join(nav2_dir, 'config', 'nav2_params.yaml'))
 
     ekf_config = os.path.join(nav2_dir, 'config', 'ekf.yaml')
+
+    initial_pose_node = Node(
+        package='mybot_navigation',
+        executable='auto_initial_pose.py',
+        name='auto_initial_pose',
+        output='screen',
+        parameters=[{
+            'use_sim_time': use_sim_time,
+            'enabled': publish_initial_pose,
+            'initial_pose_x': initial_pose_x,
+            'initial_pose_y': initial_pose_y,
+            'initial_pose_yaw': initial_pose_yaw,
+        }],
+    )
 
     ekf_node = Node(
         package="robot_localization",
@@ -67,8 +85,13 @@ def generate_launch_description():
         declare_map,
         declare_params,
         DeclareLaunchArgument('use_sim_time', default_value='true'),
+        DeclareLaunchArgument('publish_initial_pose', default_value='true', description='Publish the AMCL initial pose after AMCL subscribes.'),
+        DeclareLaunchArgument('initial_pose_x', default_value='0.0', description='Initial map-frame x coordinate.'),
+        DeclareLaunchArgument('initial_pose_y', default_value='0.0', description='Initial map-frame y coordinate.'),
+        DeclareLaunchArgument('initial_pose_yaw', default_value='0.0', description='Initial map-frame yaw in radians.'),
         ekf_node,
         nav2_bringup_launch,
+        initial_pose_node,
         # scan_filter_node,
         rviz_node
     ])
